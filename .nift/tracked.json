@@ -1,0 +1,161 @@
+{
+  "tracked": [
+    {
+      "name": "/",
+      "title": "Root",
+      "template": "templates/base.html"
+    },
+    {
+      "name": "basic/content",
+      "title": "Basic Content",
+      "template": "templates/base.html"
+    },
+    {
+      "name": "basic/content-in-partial",
+      "title": "Content In Partial",
+      "template": "templates/content-in-partial.html"
+    },
+    {
+      "name": "input/basic",
+      "title": "Input Basic",
+      "template": "templates/input-tests.html"
+    },
+    {
+      "name": "input/indent",
+      "title": "Input Indent",
+      "template": "templates/indent.html"
+    },
+    {
+      "name": "paths/direct",
+      "title": "Paths Direct",
+      "template": "templates/paths.html"
+    },
+    {
+      "name": "paths/nested/",
+      "title": "Nested Index",
+      "template": "templates/base.html"
+    },
+    {
+      "name": "metadata/all",
+      "title": "Metadata Test",
+      "template": "templates/metadata.html"
+    },
+    {
+      "name": "environment",
+      "title": "Environment",
+      "template": "templates/env.html"
+    },
+    {
+      "name": "entities",
+      "title": "Entities",
+      "template": "templates/entities.html"
+    },
+    {
+      "name": "escaping",
+      "title": "Escaping",
+      "template": "templates/escaping.html"
+    },
+    {
+      "name": "comments",
+      "title": "Comments",
+      "template": "templates/comments.html"
+    },
+    {
+      "name": "pre",
+      "title": "Pre",
+      "template": "templates/pre.html"
+    },
+    {
+      "name": "dependencies/a",
+      "title": "Dependency A",
+      "template": "templates/dep.html"
+    },
+    {
+      "name": "dependencies/b",
+      "title": "Dependency B",
+      "template": "templates/dep.html"
+    },
+    {
+      "name": "semicolon",
+      "title": "Semicolon",
+      "template": "templates/semicolon.html"
+    },
+    {
+      "name": "blank",
+      "title": "Blank",
+      "template": ""
+    },
+    {
+      "name": "shared/a",
+      "title": "Shared A",
+      "template": "templates/shared-page.html"
+    },
+    {
+      "name": "shared/b",
+      "title": "Shared B",
+      "template": "templates/shared-page.html"
+    },
+    {
+      "name": "unrelated",
+      "title": "Unrelated",
+      "template": "templates/base.html"
+    },
+    {
+      "name": "custom/text",
+      "title": "Custom Text",
+      "template": "templates/plain-content.html",
+      "content-ext": ".txt",
+      "output-ext": ".txt"
+    },
+    {
+      "name": "groups/content-inputs",
+      "title": "Content Inputs",
+      "template": "templates/base.html"
+    },
+    {
+      "name": "groups/paths-metadata",
+      "title": "Paths Metadata",
+      "template": "templates/base.html"
+    },
+    {
+      "name": "groups/parser-syntax",
+      "title": "Parser Syntax",
+      "template": "templates/base.html"
+    },
+    {
+      "name": "groups/dependencies-incremental",
+      "title": "Dependencies Incremental",
+      "template": "templates/base.html"
+    },
+    {
+      "name": "groups/cli-errors",
+      "title": "Cli Errors",
+      "template": "templates/base.html"
+    },
+    {
+      "name": "parser/function-boundaries",
+      "title": "Function Name Boundaries",
+      "template": "templates/function-boundaries.html"
+    },
+    {
+      "name": "input/special-filenames",
+      "title": "Input Special Filenames",
+      "template": "templates/input-special.html"
+    },
+    {
+      "name": "paths/deep/level/page",
+      "title": "Deep Path Matrix",
+      "template": "templates/paths-deep.html"
+    },
+    {
+      "name": "environment-literal",
+      "title": "Environment Literal",
+      "template": "templates/env-literal.html"
+    },
+    {
+      "name": "basic/repeated-content",
+      "title": "Repeated Content",
+      "template": "templates/repeated-content.html"
+    }
+  ]
+}

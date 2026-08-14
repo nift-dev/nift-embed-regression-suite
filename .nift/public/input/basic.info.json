@@ -1,0 +1,14 @@
+{
+  "name": "input/basic",
+  "title": "Input Basic",
+  "template": "templates/input-tests.html",
+  "dependencies": [
+    "content/input/basic.html",
+    "templates/input-tests.html",
+    "templates/partials/deep/a.html",
+    "templates/partials/relative-child.html",
+    "templates/partials/relative-parent.html",
+    "templates/partials/shared.html",
+    "templates/partials/space name.html"
+  ]
+}

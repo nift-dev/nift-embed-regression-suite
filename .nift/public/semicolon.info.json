@@ -1,0 +1,9 @@
+{
+  "name": "semicolon",
+  "title": "Semicolon",
+  "template": "templates/semicolon.html",
+  "dependencies": [
+    "content/semicolon.html",
+    "templates/semicolon.html"
+  ]
+}

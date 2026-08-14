@@ -1,0 +1,10 @@
+{
+  "name": "shared/a",
+  "title": "Shared A",
+  "template": "templates/shared-page.html",
+  "dependencies": [
+    "content/shared/a.html",
+    "templates/partials/shared.html",
+    "templates/shared-page.html"
+  ]
+}

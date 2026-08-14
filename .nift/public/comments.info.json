@@ -1,0 +1,9 @@
+{
+  "name": "comments",
+  "title": "Comments",
+  "template": "templates/comments.html",
+  "dependencies": [
+    "content/comments.html",
+    "templates/comments.html"
+  ]
+}

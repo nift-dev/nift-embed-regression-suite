@@ -1,0 +1,9 @@
+{
+  "name": "entities",
+  "title": "Entities",
+  "template": "templates/entities.html",
+  "dependencies": [
+    "content/entities.html",
+    "templates/entities.html"
+  ]
+}

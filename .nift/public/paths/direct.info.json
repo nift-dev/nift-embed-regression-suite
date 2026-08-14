@@ -1,0 +1,9 @@
+{
+  "name": "paths/direct",
+  "title": "Paths Direct",
+  "template": "templates/paths.html",
+  "dependencies": [
+    "content/paths/direct.html",
+    "templates/paths.html"
+  ]
+}

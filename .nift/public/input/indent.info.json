@@ -1,0 +1,9 @@
+{
+  "name": "input/indent",
+  "title": "Input Indent",
+  "template": "templates/indent.html",
+  "dependencies": [
+    "content/input/indent.html",
+    "templates/indent.html"
+  ]
+}

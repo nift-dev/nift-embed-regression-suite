@@ -1,0 +1,9 @@
+{
+  "name": "environment",
+  "title": "Environment",
+  "template": "templates/env.html",
+  "dependencies": [
+    "content/environment.html",
+    "templates/env.html"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "input/special-filenames",
+  "title": "Input Special Filenames",
+  "template": "templates/input-special.html",
+  "dependencies": [
+    "content/input/special-filenames.html",
+    "templates/input-special.html",
+    "templates/partials/special/bracket[file].html",
+    "templates/partials/special/comma,file.html",
+    "templates/partials/special/double space file.html",
+    "templates/partials/special/paren(file).html"
+  ]
+}

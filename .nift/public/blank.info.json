@@ -1,0 +1,8 @@
+{
+  "name": "blank",
+  "title": "Blank",
+  "template": "",
+  "dependencies": [
+    "content/blank.html"
+  ]
+}
