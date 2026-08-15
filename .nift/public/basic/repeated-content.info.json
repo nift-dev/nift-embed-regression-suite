@@ -1,9 +1,0 @@
-{
-  "name": "basic/repeated-content",
-  "title": "Repeated Content",
-  "template": "templates/repeated-content.html",
-  "dependencies": [
-    "content/basic/repeated-content.html",
-    "templates/repeated-content.html"
-  ]
-}

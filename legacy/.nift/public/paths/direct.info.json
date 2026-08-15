@@ -1,0 +1,11 @@
+{
+  "name": "paths/direct",
+  "title": "Paths Direct",
+  "template": "templates/paths.html",
+  "content": "content/paths/direct.html",
+  "output": "public/paths/direct.html",
+  "dependencies": [
+    "content/paths/direct.html",
+    "templates/paths.html"
+  ]
+}

@@ -1,9 +1,0 @@
-{
-  "name": "environment-literal",
-  "title": "Environment Literal",
-  "template": "templates/env-literal.html",
-  "dependencies": [
-    "content/environment-literal.html",
-    "templates/env-literal.html"
-  ]
-}

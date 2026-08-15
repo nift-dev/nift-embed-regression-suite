@@ -1,0 +1,11 @@
+{
+  "name": "/",
+  "title": "Root",
+  "template": "templates/base.html",
+  "content": "content/index.html",
+  "output": "public/index.html",
+  "dependencies": [
+    "content/index.html",
+    "templates/base.html"
+  ]
+}

@@ -1,50 +1,49 @@
-# Nift deep regression test suite — v6
+# Nift v1.0.42 Contract Regression Suite
 
-This is the current black-box regression suite for Nift.
+This is the canonical **implementation-independent** regression suite for the
+Nift v4 contract as exercised by Nift rewrite checkpoint v1.0.42.
 
-It is designed to exercise the executable from the outside using temporary
-projects, including ordinary workflows and adversarial edge cases found during
-source review.
-
-## Current baseline
-
-Validated against:
-
-```text
-Nift v4.0.0 (C++ rewrite 1.0.12)
-PASS: 279 assertions/tests
-```
-
-The v6 suite reflects the simplified comment language in Nift 1.0.12:
-`<#-- ... --#>`, `@# ...` and `@// ...` are non-executing Nift comments, and
-the removed parsed-block-comment syntax is no longer tested.
-
-The suite also treats the `info*` commands as structured JSON where appropriate
-instead of depending on the older human-readable presentation format.
-
-## Running
-
-Point `NIFT_BIN` at the executable to test:
+It does **not** compile or include Nift implementation source. Point it at any
+candidate Nift executable:
 
 ```bash
-NIFT_BIN=/path/to/nift ./scripts/run-tests.sh
+NIFT_BIN=/path/to/nift ./run-contract.sh
+# or
+./run-contract.sh /path/to/nift
 ```
 
-A successful complete run prints only the final summary:
+## What "contract" means here
 
-```text
-PASS: 279 assertions/tests
-```
+Tests exercise Nift from the outside:
 
-Failures include a test number and description.
+- CLI commands and exit status;
+- project config/tracking formats;
+- template language behavior;
+- content/input/path/metadata semantics;
+- JSON, JSON Schema, loops/conditions and dependency behavior;
+- incremental modified/hash/hybrid behavior;
+- watch/tracking/path safety and persistence behavior;
+- internal page metadata only where its observable persistence contract matters;
+- opt-in minification behavior through Nift's public configuration/CLI contract.
 
-## Coverage
+The suite deliberately does **not** call C++ classes/functions, include Nift
+headers, rely on private object layout, or require a particular internal
+algorithm. A different Nift implementation should pass if it implements the
+same externally observable contract.
 
-The suite includes parser boundaries, escaping, comments and `<pre>` behaviour,
-`@content`, nested `@input`, `@pathto`, `@dep`, metadata, tracking and watched
-directories, malformed JSON/state, filesystem/path safety, build error status,
-incremental modified/hash/hybrid modes, user `*.deps.json` dependencies,
-recursive directory hashing, `build-auto`, and CLI operations.
+## Layers
 
-Some cases deliberately sleep long enough to create reliable filesystem mtime
-changes, so a complete run can take a while.
+`legacy/` contains the accumulated historical + ruthless black-box suite
+(currently 578 assertions/tests when run against the matched checkpoint).
+
+`contract/` contains the later focused executable-level contract modules that
+were previously kept beside the Nift source tree.
+
+`benchmarks/` contains optional scaling/performance/RSS regression guards.
+Performance is kept separate from correctness because absolute timings and RSS
+are machine/platform dependent.
+
+Implementation-level C++ tests (for example direct JSON/JSON-Schema unit tests)
+remain with the Nift source repository and are intentionally not duplicated
+here, because those tests validate one implementation rather than the Nift
+contract.

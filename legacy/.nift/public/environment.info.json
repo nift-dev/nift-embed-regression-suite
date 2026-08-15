@@ -1,0 +1,11 @@
+{
+  "name": "environment",
+  "title": "Environment",
+  "template": "templates/env.html",
+  "content": "content/environment.html",
+  "output": "public/environment.html",
+  "dependencies": [
+    "content/environment.html",
+    "templates/env.html"
+  ]
+}

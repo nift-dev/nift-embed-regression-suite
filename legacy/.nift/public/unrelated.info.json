@@ -1,0 +1,11 @@
+{
+  "name": "unrelated",
+  "title": "Unrelated",
+  "template": "templates/base.html",
+  "content": "content/unrelated.html",
+  "output": "public/unrelated.html",
+  "dependencies": [
+    "content/unrelated.html",
+    "templates/base.html"
+  ]
+}

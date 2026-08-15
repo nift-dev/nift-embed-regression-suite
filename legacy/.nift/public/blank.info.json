@@ -1,0 +1,10 @@
+{
+  "name": "blank",
+  "title": "Blank",
+  "template": "",
+  "content": "content/blank.html",
+  "output": "public/blank.html",
+  "dependencies": [
+    "content/blank.html"
+  ]
+}

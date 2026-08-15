@@ -1,0 +1,11 @@
+{
+  "name": "basic/repeated-content",
+  "title": "Repeated Content",
+  "template": "templates/repeated-content.html",
+  "content": "content/basic/repeated-content.html",
+  "output": "public/basic/repeated-content.html",
+  "dependencies": [
+    "content/basic/repeated-content.html",
+    "templates/repeated-content.html"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "groups/content-inputs",
+  "title": "Content Inputs",
+  "template": "templates/base.html",
+  "content": "content/groups/content-inputs.html",
+  "output": "public/groups/content-inputs.html",
+  "dependencies": [
+    "content/groups/content-inputs.html",
+    "templates/base.html"
+  ]
+}

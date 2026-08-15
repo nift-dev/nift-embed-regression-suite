@@ -1,9 +1,0 @@
-{
-  "name": "groups/dependencies-incremental",
-  "title": "Dependencies Incremental",
-  "template": "templates/base.html",
-  "dependencies": [
-    "content/groups/dependencies-incremental.html",
-    "templates/base.html"
-  ]
-}

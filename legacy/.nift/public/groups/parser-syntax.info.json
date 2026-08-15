@@ -1,0 +1,11 @@
+{
+  "name": "groups/parser-syntax",
+  "title": "Parser Syntax",
+  "template": "templates/base.html",
+  "content": "content/groups/parser-syntax.html",
+  "output": "public/groups/parser-syntax.html",
+  "dependencies": [
+    "content/groups/parser-syntax.html",
+    "templates/base.html"
+  ]
+}

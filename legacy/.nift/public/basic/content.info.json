@@ -1,0 +1,11 @@
+{
+  "name": "basic/content",
+  "title": "Basic Content",
+  "template": "templates/base.html",
+  "content": "content/basic/content.html",
+  "output": "public/basic/content.html",
+  "dependencies": [
+    "content/basic/content.html",
+    "templates/base.html"
+  ]
+}

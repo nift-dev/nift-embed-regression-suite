@@ -1,0 +1,11 @@
+{
+  "name": "escaping",
+  "title": "Escaping",
+  "template": "templates/escaping.html",
+  "content": "content/escaping.html",
+  "output": "public/escaping.html",
+  "dependencies": [
+    "content/escaping.html",
+    "templates/escaping.html"
+  ]
+}

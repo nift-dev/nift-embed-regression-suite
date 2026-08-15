@@ -1,0 +1,11 @@
+{
+  "name": "custom/text",
+  "title": "Custom Text",
+  "template": "templates/plain-content.html",
+  "content": "content/custom/text.txt",
+  "output": "public/custom/text.txt",
+  "dependencies": [
+    "content/custom/text.txt",
+    "templates/plain-content.html"
+  ]
+}

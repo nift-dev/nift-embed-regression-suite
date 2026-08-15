@@ -1,9 +1,0 @@
-{
-  "name": "groups/cli-errors",
-  "title": "Cli Errors",
-  "template": "templates/base.html",
-  "dependencies": [
-    "content/groups/cli-errors.html",
-    "templates/base.html"
-  ]
-}

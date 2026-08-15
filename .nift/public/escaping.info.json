@@ -1,9 +1,0 @@
-{
-  "name": "escaping",
-  "title": "Escaping",
-  "template": "templates/escaping.html",
-  "dependencies": [
-    "content/escaping.html",
-    "templates/escaping.html"
-  ]
-}

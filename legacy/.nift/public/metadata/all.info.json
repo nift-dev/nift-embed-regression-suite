@@ -1,0 +1,11 @@
+{
+  "name": "metadata/all",
+  "title": "Metadata Test",
+  "template": "templates/metadata.html",
+  "content": "content/metadata/all.html",
+  "output": "public/metadata/all.html",
+  "dependencies": [
+    "content/metadata/all.html",
+    "templates/metadata.html"
+  ]
+}

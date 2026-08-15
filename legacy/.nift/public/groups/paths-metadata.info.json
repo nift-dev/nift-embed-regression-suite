@@ -1,0 +1,11 @@
+{
+  "name": "groups/paths-metadata",
+  "title": "Paths Metadata",
+  "template": "templates/base.html",
+  "content": "content/groups/paths-metadata.html",
+  "output": "public/groups/paths-metadata.html",
+  "dependencies": [
+    "content/groups/paths-metadata.html",
+    "templates/base.html"
+  ]
+}

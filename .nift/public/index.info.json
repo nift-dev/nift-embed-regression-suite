@@ -1,9 +1,0 @@
-{
-  "name": "/",
-  "title": "Root",
-  "template": "templates/base.html",
-  "dependencies": [
-    "content/index.html",
-    "templates/base.html"
-  ]
-}

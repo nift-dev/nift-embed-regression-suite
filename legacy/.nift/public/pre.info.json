@@ -1,0 +1,11 @@
+{
+  "name": "pre",
+  "title": "Pre",
+  "template": "templates/pre.html",
+  "content": "content/pre.html",
+  "output": "public/pre.html",
+  "dependencies": [
+    "content/pre.html",
+    "templates/pre.html"
+  ]
+}

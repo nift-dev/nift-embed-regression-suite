@@ -1,9 +1,0 @@
-{
-  "name": "paths/deep/level/page",
-  "title": "Deep Path Matrix",
-  "template": "templates/paths-deep.html",
-  "dependencies": [
-    "content/paths/deep/level/page.html",
-    "templates/paths-deep.html"
-  ]
-}

@@ -1,9 +1,0 @@
-{
-  "name": "parser/function-boundaries",
-  "title": "Function Name Boundaries",
-  "template": "templates/function-boundaries.html",
-  "dependencies": [
-    "content/parser/function-boundaries.html",
-    "templates/function-boundaries.html"
-  ]
-}

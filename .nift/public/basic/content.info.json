@@ -1,9 +1,0 @@
-{
-  "name": "basic/content",
-  "title": "Basic Content",
-  "template": "templates/base.html",
-  "dependencies": [
-    "content/basic/content.html",
-    "templates/base.html"
-  ]
-}

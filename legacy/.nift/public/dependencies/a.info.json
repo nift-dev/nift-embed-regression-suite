@@ -1,0 +1,13 @@
+{
+  "name": "dependencies/a",
+  "title": "Dependency A",
+  "template": "templates/dep.html",
+  "content": "content/dependencies/a.html",
+  "output": "public/dependencies/a.html",
+  "dependencies": [
+    "content/dependencies/a.html",
+    "data/dep-a.txt",
+    "data/dep-b.txt",
+    "templates/dep.html"
+  ]
+}

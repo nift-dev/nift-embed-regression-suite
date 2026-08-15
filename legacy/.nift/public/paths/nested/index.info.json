@@ -1,0 +1,11 @@
+{
+  "name": "paths/nested/",
+  "title": "Nested Index",
+  "template": "templates/base.html",
+  "content": "content/paths/nested/index.html",
+  "output": "public/paths/nested/index.html",
+  "dependencies": [
+    "content/paths/nested/index.html",
+    "templates/base.html"
+  ]
+}
