@@ -1,0 +1,114 @@
+# Nift external-contract testing
+
+## Contract surface
+
+The suite covers externally observable behavior including CLI commands/status,
+tracking/configuration, template syntax, content/input/path/metadata semantics,
+JSON/Schema/control flow, dependencies and requirements, modified/hash/hybrid
+incrementality, watch/persistence/path safety, missing/deleted resources, and
+opt-in minification through Nift's public interface.
+
+Internal page metadata is tested only where its persistence affects observable
+behavior. Private algorithms and representations are not contractual.
+
+## Reconciled baseline (2026-08-16)
+
+`run-contract.sh` passed all 14 modules against the current repository-built Nift
+executable. The result includes the 578-assertion historical/ruthless suite and
+all focused contract modules. The runner's disposable-copy design was confirmed:
+the historical tests mutate only a temporary suite copy, while focused modules
+create their own temporary projects. Performance/RSS benchmarks and sanitizer
+instrumentation were not part of this correctness baseline.
+
+The focused contract shell scripts also have implementation-local counterparts.
+Keep the independent repository canonical for externally observable behavior or
+establish another explicit policy, then enforce expected equality mechanically;
+do not let two manually maintained copies become competing contracts.
+
+## Methodology
+
+```text
+read implementation or observe bug
+→ identify an assumption
+→ violate it with the smallest external fixture
+→ make it deterministic
+→ prove the expected failure
+→ retain regression
+→ inspect sibling assumptions
+→ run the cumulative corpus
+```
+
+Bug-family reasoning outranks raw case count. Exit status, which files changed,
+whether old output survived, whether state was committed, and what rebuilds are
+selected are all part of the contract.
+
+## Historical families and lessons
+
+- Quote ambiguity: single/double quotes only; backticks are not Nift quotes.
+- Function adjacency such as `@content<`: positive token grammar and boundary
+  tests are safer than permissive parsing.
+- CSS at-rules: unknown ordinary web syntax should remain transparent.
+- Watch initialization and malformed JSON: test complete lifecycle and treat
+  persisted state as untrusted.
+- Empty tracking/quoted metadata: test zero collections and correct serialization.
+- CLI/build-updated failures: non-zero status is required when requested work
+  fails.
+- Deleted output/directory/hash cache: repeated transitions matter, not only one
+  successful build.
+- Traversal/collisions: project paths and derived outputs are safety boundaries.
+- Sub-second mtimes: control timestamps rather than sleeping.
+- Hash collision: hostile construction can invalidate “unlikely” assumptions.
+- Dependency sidecars and lexical scope: test lifecycle replacement/restoration.
+
+## Fixture design
+
+Prefer small temporary projects. Cases should establish their own state except
+when a multi-step lifecycle is intentional. Control paths, timestamps, contents,
+order, environment, and seeds where practical. Keep successful output concise and
+failure output localized by module/test identity.
+
+Do not weaken a test because a candidate implementation fails. Determine whether
+the contract intentionally changed, the test assumption was wrong, or the
+implementation regressed. Record deliberate contract changes.
+
+## `$[...]` textual-parameter family
+
+The upcoming contract should cover:
+
+- whole unquoted value arguments and quoted literal/value composition;
+- prefix, suffix, multiple, and adjacent substitutions;
+- metadata, JSON strings, nested indexing, loop bindings, shadowing, and skipped
+  branches using the existing value grammar;
+- single/double quote parity, whitespace accepted by current grammar, and the
+  existing literal-dollar escape;
+- missing bindings, malformed expressions, empty values, and each JSON type under
+  the deliberately chosen type contract;
+- values containing quotes, commas, parentheses, `@...`, and `$[...]` remaining
+  one-pass data rather than changing argument count or executing syntax;
+- no parameter value leaking into document output;
+- binding/control-flow identifier positions remaining static;
+- path traversal/symlink/containment parity with literal arguments;
+- ordinary literal arguments and nearby CSS/JS remaining unchanged.
+
+Directive families should include every verified textual slot: likely `@input`,
+`@dep`, `@pathto`, and `@json` source/schema paths, plus other current directives
+only after source classification.
+
+The essential dynamic graph sequence is A→B: selector source and A initially
+matter; after a successful switch, selector source and B matter while stale A no
+longer causes rebuilding. Test missing target failure, prior output/state
+preservation, repair, and relevant incremental modes/watch. Requirements receive
+the analogous existence lifecycle.
+
+## Internal/external division
+
+Direct resolver, parser index, string lifetime, scope-stack, and value-type unit
+tests belong with Nift C++. The external suite proves end-to-end behavior. Do not
+move all coverage to the easier layer.
+
+## Performance and safety
+
+Run performance separately and retain context. Scaling ratios are often more
+portable than strict milliseconds. Sanitizer evidence belongs primarily to the
+implementation repository, but the external suite is an excellent workload to
+run under a sanitized candidate.
