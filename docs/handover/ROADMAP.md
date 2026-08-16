@@ -8,8 +8,9 @@ coverage changes, or production confidence changes.
 
 1. Reconcile local and standalone focused modules and establish an automated
    synchronization/ownership check where exact mirroring is intended.
-2. Capture `$[...]` parameter-value semantics before implementation, including
-   one-pass injection boundaries and A→B dependency/requirement lifecycle.
+2. Preserve and extend the now-green 73-check `$[...]` parameter-value contract,
+   including one-pass injection boundaries and A→B dependency/requirement
+   lifecycle, without making parameters recursive Nift templates.
 3. Run and preserve all existing historical/focused coverage against the
    candidate.
 4. Expand source-guided interaction tests around JSON, scope, control flow,
@@ -23,4 +24,3 @@ The objective is not a target count. It is credible coverage of public behavior
 and historical failure families sufficient to answer whether a refactor preserved
 Nift. After production, every important defect should still become a minimized
 regression and new features should expand the contract.
-

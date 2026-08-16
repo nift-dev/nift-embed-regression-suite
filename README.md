@@ -39,6 +39,11 @@ same externally observable contract.
 `contract/` contains the later focused executable-level contract modules that
 were previously kept beside the Nift source tree.
 
+`contract/parameter_interpolation_smoke.sh` is the 73-check contract for `$[...]`
+interpolation in textual `@function(...)` parameters. It was written red before
+implementation and now passes with the other 14 modules. Its history preserves
+that test-first checkpoint; the current expected result is 15 green modules.
+
 `benchmarks/` contains optional scaling/performance/RSS regression guards.
 Performance is kept separate from correctness because absolute timings and RSS
 are machine/platform dependent.

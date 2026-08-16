@@ -5,8 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NIFT_BIN="${NIFT_BIN:-nift}"
 FAILS=0
 TESTS=0
-TMP_ROOT="${TMPDIR:-/tmp}/nift-v04-tests-$$"
-mkdir -p "$TMP_ROOT"
+TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/nift-v04-tests.XXXXXX")"
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
 fail(){ printf 'FAIL [test %03d]: %s\n' "$TESTS" "$*" >&2; FAILS=$((FAILS+1)); }

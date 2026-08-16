@@ -54,6 +54,7 @@ for test in \
   metadata_safety_smoke.sh \
   cross_feature_smoke.sh \
   incremental_new_features_smoke.sh \
+  parameter_interpolation_smoke.sh \
   persistence_concurrency_failure_smoke.sh \
   minify_integration_smoke.sh
 do

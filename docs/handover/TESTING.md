@@ -20,6 +20,27 @@ the historical tests mutate only a temporary suite copy, while focused modules
 create their own temporary projects. Performance/RSS benchmarks and sanitizer
 instrumentation were not part of this correctness baseline.
 
+### Parameter-interpolation checkpoint
+
+`contract/parameter_interpolation_smoke.sh` deliberately specified the feature
+before implementation: its first baseline had two passing boundary checks and
+43 expected failures. It now contains 73 passing checks. Preserve the historical
+red checkpoint as evidence of test-first development, but treat any current
+failure as a regression rather than an expected baseline.
+
+The module covers all semantically textual directive positions, scalar parity
+with ordinary `$[...]`, static binding identifiers, source-boundary safety,
+one-pass/non-recursive values, literal escaping, nested lexical scope and loop
+metadata, skipped branches, dependency/requirement recording, path containment,
+modified/hash/hybrid A-to-B input replacement, explicit `@dep` replacement,
+dynamic JSON-source replacement, requirement existence semantics, and failed-build
+output/metadata preservation plus repair.
+
+The historical runner previously used a predictable PID-named temporary directory.
+In the desktop execution environment PIDs can be reused while stale directories
+remain, causing unrelated legacy setup failures. It now uses `mktemp -d`; this is
+harness isolation hardening and does not alter the external Nift contract.
+
 The focused contract shell scripts also have implementation-local counterparts.
 Keep the independent repository canonical for externally observable behavior or
 establish another explicit policy, then enforce expected equality mechanically;
