@@ -1,0 +1,15 @@
+# Python caches and coverage
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local test and diagnostic residue
+.tmp/
+*.log
+*.tmp
+*.swp
+*~
+.DS_Store
+Thumbs.db
