@@ -1,7 +1,7 @@
 # Nift v4 Contract Regression Suite
 
 This is the canonical **implementation-independent** regression suite for the
-Nift v4 contract. The current executable checkpoint targets Nift 4.0.1.
+Nift v4 contract. The current executable checkpoint targets Nift 4.0.2.
 
 It does **not** compile or include Nift implementation source. Point it at any
 candidate Nift executable:
@@ -34,7 +34,7 @@ same externally observable contract.
 ## Layers
 
 `legacy/` contains the accumulated historical + ruthless black-box suite
-(currently 575 assertions/tests against the 4.0.1 candidate).
+(currently 575 assertions/tests against the 4.0.2 development checkpoint).
 
 `contract/` contains the later focused executable-level contract modules that
 were previously kept beside the Nift source tree.

@@ -1,7 +1,7 @@
 # Nift regression-suite handover
 
 This repository is the canonical implementation-independent behavioral contract
-for the Nift v4 family. The current executable checkpoint targets Nift 4.0.1; it
+for the Nift v4 family. The current executable checkpoint targets Nift 4.0.2; it
 is not an implementation test directory extracted from the C++ tree.
 
 ## Authority and purpose
