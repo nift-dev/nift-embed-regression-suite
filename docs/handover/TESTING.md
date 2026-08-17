@@ -11,11 +11,12 @@ opt-in minification through Nift's public interface.
 Internal page metadata is tested only where its persistence affects observable
 behavior. Private algorithms and representations are not contractual.
 
-## Reconciled baseline (2026-08-16)
+## Reconciled baseline (2026-08-17)
 
-`run-contract.sh` passed all 14 modules against the current repository-built Nift
-executable. The result includes the 578-assertion historical/ruthless suite and
-all focused contract modules. The runner's disposable-copy design was confirmed:
+`run-contract.sh` passed all 17 modules against the repository-built Nift 4.0.1
+candidate. The result includes the 575-assertion historical/ruthless suite and
+16 focused contract modules, including project contracts and optional tracked
+templates. The runner's disposable-copy design was confirmed:
 the historical tests mutate only a temporary suite copy, while focused modules
 create their own temporary projects. Performance/RSS benchmarks and sanitizer
 instrumentation were not part of this correctness baseline.

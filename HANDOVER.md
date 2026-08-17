@@ -1,8 +1,8 @@
 # Nift regression-suite handover
 
 This repository is the canonical implementation-independent behavioral contract
-for the Nift v4 family as currently exercised by rewrite checkpoint 1.0.42. It is
-not an implementation test directory extracted from the C++ tree.
+for the Nift v4 family. The current executable checkpoint targets Nift 4.0.1; it
+is not an implementation test directory extracted from the C++ tree.
 
 ## Authority and purpose
 
@@ -31,8 +31,9 @@ history; this repository owns black-box contract methodology.
   institutional context, including failure families, parameter
   interpolation coverage, and production-readiness responsibilities.
 
-The README currently records 578 historical assertions plus focused contract
-modules. Treat counts as checkpoint facts, not the quality claim.
+The current baseline records 575 historical assertions plus 16 focused contract
+modules, reported by the runner as 17 green modules. Treat counts as checkpoint
+facts, not the quality claim.
 
 ## Running
 

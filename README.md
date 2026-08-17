@@ -1,7 +1,7 @@
-# Nift v1.0.42 Contract Regression Suite
+# Nift v4 Contract Regression Suite
 
 This is the canonical **implementation-independent** regression suite for the
-Nift v4 contract as exercised by Nift rewrite checkpoint v1.0.42.
+Nift v4 contract. The current executable checkpoint targets Nift 4.0.1.
 
 It does **not** compile or include Nift implementation source. Point it at any
 candidate Nift executable:
@@ -34,7 +34,7 @@ same externally observable contract.
 ## Layers
 
 `legacy/` contains the accumulated historical + ruthless black-box suite
-(currently 578 assertions/tests when run against the matched checkpoint).
+(currently 575 assertions/tests against the 4.0.1 candidate).
 
 `contract/` contains the later focused executable-level contract modules that
 were previously kept beside the Nift source tree.
@@ -42,8 +42,8 @@ were previously kept beside the Nift source tree.
 `contract/parameter_interpolation_smoke.sh` is the 73-check contract for `$[...]`
 interpolation in textual `@function(...)` parameters. It was written red before
 implementation and now passes with the other focused modules. Its history
-preserves that test-first checkpoint; the current expected result is 16 green
-modules.
+preserves that test-first checkpoint; the current expected result is 17 green
+modules: the historical/ruthless module plus 16 focused modules.
 
 `contract/template_optional_smoke.sh` protects the externally observable
 template-less tracked-entry contract: parsed direct content, compatibility with
