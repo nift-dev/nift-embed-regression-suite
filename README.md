@@ -58,3 +58,7 @@ Implementation-level C++ tests (for example direct JSON/JSON-Schema unit tests)
 remain with the Nift source repository and are intentionally not duplicated
 here, because those tests validate one implementation rather than the Nift
 contract.
+
+### Project contracts
+
+The canonical runner includes `contract/contracts_smoke.sh`, covering config-declared project-wide JSON contracts, namespace collision rules, lazy loading, incremental dependency/config remapping, and controlled failures.

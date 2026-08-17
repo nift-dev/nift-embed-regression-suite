@@ -150,3 +150,7 @@ Run performance separately and retain context. Scaling ratios are often more
 portable than strict milliseconds. Sanitizer evidence belongs primarily to the
 implementation repository, but the external suite is an excellent workload to
 run under a sanitized candidate.
+
+## Project contracts
+
+The project-contract module treats config declaration, namespace ownership, `$[...]` resolution, dependency metadata, incremental source/config transitions, and controlled failures as one behavioral surface. The suite intentionally tests malformed unused contracts to prove lazy loading and tests an ordinary unconfigured `$[...]` root so the implementation cannot silently reinterpret every unknown value as a contract.

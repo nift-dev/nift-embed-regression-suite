@@ -19,7 +19,7 @@ history; this repository owns black-box contract methodology.
 ## Layout
 
 - `run-contract.sh`: resolves the candidate executable, creates disposable state,
-  and runs all correctness modules.
+  and runs all correctness modules, including config-declared project contracts.
 - `legacy/`: accumulated historical and ruthless black-box suite; copied before
   execution because it intentionally mutates its fixture.
 - `contract/`: focused executable-level modules previously mirrored near Nift.
@@ -95,3 +95,7 @@ ownership, synchronization, fixture strategy, major failure families, or
 production-gate responsibilities change. Correct and consolidate it over time;
 do not append a diary. Every substantial checkpoint must review handover and
 roadmap impact.
+
+## Project-contract coverage
+
+`contract/contracts_smoke.sh` is the implementation-independent executable contract for config-declared project contracts. It protects lazy JSON namespace resolution, dependency/config remapping, parameter/control-flow integration, collision/shadowing rejection, controlled failure diagnostics, and path containment. Keep it synchronized with the focused Nift source-tree copy without coupling it to Nift internals.

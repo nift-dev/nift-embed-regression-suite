@@ -55,6 +55,7 @@ for test in \
   cross_feature_smoke.sh \
   incremental_new_features_smoke.sh \
   parameter_interpolation_smoke.sh \
+  contracts_smoke.sh \
   persistence_concurrency_failure_smoke.sh \
   minify_integration_smoke.sh \
   template_optional_smoke.sh

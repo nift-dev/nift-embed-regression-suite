@@ -24,3 +24,7 @@ The objective is not a target count. It is credible coverage of public behavior
 and historical failure families sufficient to answer whether a refactor preserved
 Nift. After production, every important defect should still become a minimized
 regression and new features should expand the contract.
+
+## Project contracts
+
+Keep the new config-declared project-contract module in the canonical runner and extend it whenever contract namespace semantics, dependency lifecycle, or path/error behavior changes. Full-suite green evidence is required before treating the feature checkpoint as trusted.
