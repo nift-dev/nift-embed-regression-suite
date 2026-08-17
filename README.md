@@ -41,8 +41,14 @@ were previously kept beside the Nift source tree.
 
 `contract/parameter_interpolation_smoke.sh` is the 73-check contract for `$[...]`
 interpolation in textual `@function(...)` parameters. It was written red before
-implementation and now passes with the other 14 modules. Its history preserves
-that test-first checkpoint; the current expected result is 15 green modules.
+implementation and now passes with the other focused modules. Its history
+preserves that test-first checkpoint; the current expected result is 16 green
+modules.
+
+`contract/template_optional_smoke.sh` protects the externally observable
+template-less tracked-entry contract: parsed direct content, compatibility with
+the historical empty-string form, templated/template-less dependency replacement,
+and scaffold output.
 
 `benchmarks/` contains optional scaling/performance/RSS regression guards.
 Performance is kept separate from correctness because absolute timings and RSS

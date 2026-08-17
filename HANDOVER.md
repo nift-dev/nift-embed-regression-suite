@@ -55,6 +55,14 @@ For a deliberate language change: specify the new external behavior first, retai
 old tests unless the contract intentionally changes, record the rationale, and
 test high-risk interactions rather than one happy path.
 
+Every user-visible Nift behavior change must receive an explicit coverage
+accounting before the checkpoint is considered complete: identify its
+implementation-local tests and its independent black-box contract module. Add
+both when both layers apply. If a layer genuinely cannot test the behavior,
+record the reason in the checkpoint report rather than allowing omission by
+silence. Confirm the new contract module is listed by `run-contract.sh`; a test
+file that the canonical runner never executes is not coverage.
+
 Tests should own machine-checkable behavior. This handover owns why the suite is
 structured this way. Individual bugs generally belong in named fixtures/tests and
 Git history unless they reveal a durable testing rule.

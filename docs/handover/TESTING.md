@@ -63,6 +63,23 @@ Bug-family reasoning outranks raw case count. Exit status, which files changed,
 whether old output survived, whether state was committed, and what rebuilds are
 selected are all part of the contract.
 
+## Coverage accounting gate
+
+For each new user-visible behavior, syntax rule, configuration field, CLI result,
+scaffold change, or incremental-state transition, record a two-layer coverage
+map before declaring the development checkpoint complete:
+
+```text
+behavior or invariant
+  -> Nift implementation-local test/target
+  -> independent contract module executed by run-contract.sh
+```
+
+Do not infer that adding a source-repository shell test updates this standalone
+suite. Verify both repository diffs and run the canonical external runner against
+the candidate executable. When only one layer applies, document why; “forgot the
+other repository” is not an acceptable exception.
+
 ## Historical families and lessons
 
 - Quote ambiguity: single/double quotes only; backticks are not Nift quotes.
