@@ -40,7 +40,7 @@ assert cfg['content-ext'] == '.txt'
 assert cfg['output-ext'] == '.txt'
 PY
 
-for target in vercel netlify amplify azure firebase render cloudflare github-pages; do
+for target in vercel netlify amplify azure firebase render cloudflare github-pages supabase; do
   run_init "$target" --target="$target"
   (cd "$TMP/$target" && "$NIFT_BIN" build >/dev/null)
 done
@@ -95,6 +95,10 @@ grep -q 'pages_build_output_dir = "./public"' "$TMP/cloudflare/wrangler.toml"
 # workflow setup is documented because the runner must install Nift first.
 test -f "$TMP/github-pages/public/index.html"
 test ! -e "$TMP/github-pages/.github/workflows/pages.yml"
+# Supabase is intentionally an integration-only target: ordinary Nift output,
+# with backend project state added later by the Supabase CLI when needed.
+test -f "$TMP/supabase/public/index.html"
+test ! -e "$TMP/supabase/supabase/config.toml"
 
 expect_fail() {
   local name=$1

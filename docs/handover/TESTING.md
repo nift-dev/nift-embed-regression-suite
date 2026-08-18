@@ -56,7 +56,7 @@ positional extension and `init-html` forms are removal diagnostics rather than
 compatibility aliases.
 
 `contract/init_targets_smoke.sh` independently checks the default/PHP/neutral
-starter families, all eight target project shapes, target-extension rejection,
+starter families, all nine target project shapes, target-extension rejection,
 provider configuration/output artifacts, preservation of an existing `.gitignore`,
 and the removed-spelling diagnostics. The historical runner was migrated to the
 new default while retaining explicit checks that the removed forms fail.
