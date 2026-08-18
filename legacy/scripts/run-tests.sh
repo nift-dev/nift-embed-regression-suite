@@ -406,8 +406,8 @@ TESTS=$((TESTS+1)); cli rm cli-new || fail 'CLI rm failed'; [[ ! -f "$CLI/conten
 # init smoke test
 INIT="$TMP_ROOT/init"; mkdir -p "$INIT"
 TESTS=$((TESTS+1))
-if ! (cd "$INIT" && "$NIFT_BIN" init .html >/dev/null 2>"$TMP_ROOT/init.err"); then
-  fail 'nift init .html failed'
+if ! (cd "$INIT" && "$NIFT_BIN" init >/dev/null 2>"$TMP_ROOT/init.err"); then
+  fail 'nift init failed'
 else
   [[ -f "$INIT/.nift/config.json" ]] || fail 'init missing config.json'
   [[ -f "$INIT/.nift/tracked.json" ]] || fail 'init missing tracked.json'
@@ -487,7 +487,7 @@ TESTS=$((TESTS+1))
 TESTS=$((TESTS+1))
 WA="$TMP_ROOT/watch-auto"
 mkdir -p "$WA"
-(cd "$WA" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$WA" && "$NIFT_BIN" init >/dev/null 2>&1)
 mkdir -p "$WA/content/articles"
 printf '@content\n' >"$WA/templates/article.html"
 (cd "$WA" && "$NIFT_BIN" watch content/articles/ .md templates/article.html .html >/dev/null 2>&1) || fail 'watch custom extension setup failed'
@@ -506,11 +506,22 @@ else
   fi
 fi
 
-# init-html remains a compatibility alias.
+# Removed init spellings must fail clearly.
 TESTS=$((TESTS+1))
 IH="$TMP_ROOT/init-html"; mkdir -p "$IH"
-(cd "$IH" && "$NIFT_BIN" init-html >/dev/null 2>&1) || fail 'init-html compatibility alias failed'
-[[ -f "$IH/public/index.html" ]] || fail 'init-html did not build public/index.html'
+if (cd "$IH" && "$NIFT_BIN" init-html >"$TMP_ROOT/init-html.out" 2>"$TMP_ROOT/init-html.err"); then
+  fail 'removed init-html command still succeeds'
+else
+  grep -Fq "command 'init-html' has been removed" "$TMP_ROOT/init-html.err" || fail 'init-html removal diagnostic missing'
+fi
+
+TESTS=$((TESTS+1))
+IP="$TMP_ROOT/init-positional"; mkdir -p "$IP"
+if (cd "$IP" && "$NIFT_BIN" init .html >"$TMP_ROOT/init-positional.out" 2>"$TMP_ROOT/init-positional.err"); then
+  fail 'removed positional init extension still succeeds'
+else
+  grep -Fq 'positional init arguments are no longer supported' "$TMP_ROOT/init-positional.err" || fail 'positional init removal diagnostic missing'
+fi
 
 # Invalid options on commands that explicitly enumerate options should fail cleanly.
 for badcmd in "status" "build-updated" "build-all"; do
@@ -565,7 +576,7 @@ fi
 TESTS=$((TESTS+1))
 EMPTY="$TMP_ROOT/empty-tracking"
 mkdir -p "$EMPTY"
-(cd "$EMPTY" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$EMPTY" && "$NIFT_BIN" init >/dev/null 2>&1)
 (cd "$EMPTY" && "$NIFT_BIN" untrack / assets/css/style assets/js/script >/dev/null 2>&1) || fail 'untracking all initial files failed'
 python3 -S -m json.tool "$EMPTY/.nift/tracked.json" >/dev/null 2>&1 || fail 'saving zero tracked files produces invalid tracked.json'
 (cd "$EMPTY" && "$NIFT_BIN" info-all >/dev/null 2>&1) || fail 'Nift cannot reopen project after all files are untracked'
@@ -575,7 +586,7 @@ python3 -S -m json.tool "$EMPTY/.nift/tracked.json" >/dev/null 2>&1 || fail 'sav
 TESTS=$((TESTS+1))
 QUOTED="$TMP_ROOT/quoted-title"
 mkdir -p "$QUOTED"
-(cd "$QUOTED" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$QUOTED" && "$NIFT_BIN" init >/dev/null 2>&1)
 (cd "$QUOTED" && "$NIFT_BIN" track quote-title 'He said "Hi"' >/dev/null 2>&1) || fail 'track rejected title containing only double quotes'
 python3 -S -m json.tool "$QUOTED/.nift/tracked.json" >/dev/null 2>&1 || fail 'track title containing double quotes corrupts tracked.json (JSON escaping bug candidate)'
 (cd "$QUOTED" && "$NIFT_BIN" info quote-title >/dev/null 2>&1) || fail 'project cannot reopen after quoted title is saved'
@@ -592,7 +603,7 @@ fi
 TESTS=$((TESTS+1))
 BN="$TMP_ROOT/build-name-failure"
 mkdir -p "$BN"
-(cd "$BN" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$BN" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf '%s\n' '@input("missing-build-name-file")' '@content' >"$BN/templates/template.html"
 if (cd "$BN" && "$NIFT_BIN" build / >"$TMP_ROOT/build-name-failure.log" 2>&1); then
   fail 'targeted build returns success status when parser/build fails (build_names failure propagation bug candidate)'
@@ -604,7 +615,7 @@ grep -Fq 'all 1 specified files built successfully' "$TMP_ROOT/build-name-failur
 TESTS=$((TESTS+1))
 BU="$TMP_ROOT/build-updated-failure"
 mkdir -p "$BU"
-(cd "$BU" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$BU" && "$NIFT_BIN" init >/dev/null 2>&1)
 sleep 1.1
 printf '%s\n' '@input("missing-updated-file")' '@content' >"$BU/templates/template.html"
 if (cd "$BU" && "$NIFT_BIN" build-updated >"$TMP_ROOT/build-updated-failure.log" 2>&1); then
@@ -616,7 +627,7 @@ fi
 TESTS=$((TESTS+1))
 MISSOUT="$TMP_ROOT/missing-output"
 mkdir -p "$MISSOUT"
-(cd "$MISSOUT" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$MISSOUT" && "$NIFT_BIN" init >/dev/null 2>&1)
 rm -f "$MISSOUT/public/index.html"
 (cd "$MISSOUT" && "$NIFT_BIN" build-updated >/dev/null 2>&1) || fail 'build-updated failed while checking missing output'
 [[ -f "$MISSOUT/public/index.html" ]] || fail 'build-updated considers a deleted generated output up to date'
@@ -660,20 +671,20 @@ check_no_abort(){
 
 MAL="$TMP_ROOT/malformed-tracked"
 mkdir -p "$MAL"
-(cd "$MAL" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$MAL" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf '%s\n' '{"tracked":[123]}' >"$MAL/.nift/tracked.json"
 check_no_abort 'tracked.json with non-object array member' bash -c "cd '$MAL' && '$NIFT_BIN' info-all"
 
 MW="$TMP_ROOT/malformed-watch"
 mkdir -p "$MW"
-(cd "$MW" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$MW" && "$NIFT_BIN" init >/dev/null 2>&1)
 mkdir -p "$MW/.nift/.watch"
 printf '%s\n' 'not json' >"$MW/.nift/.watch/watched.json"
 check_no_abort 'malformed watched.json' bash -c "cd '$MW' && '$NIFT_BIN' info-watching"
 
 ME="$TMP_ROOT/malformed-watch-ext"
 mkdir -p "$ME"
-(cd "$ME" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$ME" && "$NIFT_BIN" init >/dev/null 2>&1)
 mkdir -p "$ME/content/w"
 (cd "$ME" && "$NIFT_BIN" watch content/w/ >/dev/null 2>&1) || fail 'watch setup for malformed exts probe failed'
 printf '%s\n' 'not json' >"$ME/.nift/.watch/content/w/exts.json"
@@ -695,7 +706,7 @@ fi
 TESTS=$((TESTS+1))
 ZERO="$TMP_ROOT/zero-build-threads"
 mkdir -p "$ZERO"
-(cd "$ZERO" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$ZERO" && "$NIFT_BIN" init >/dev/null 2>&1)
 rm -f "$ZERO/public/index.html"
 sed -i 's/"build-threads":[[:space:]]*-1/"build-threads": 0/' "$ZERO/.nift/config.json"
 had_errexit=0
@@ -712,7 +723,7 @@ TESTS=$((TESTS+1))
 TRAV_PARENT="$TMP_ROOT/traversal-parent"
 TRAV="$TRAV_PARENT/project"
 mkdir -p "$TRAV"
-(cd "$TRAV" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$TRAV" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$TRAV" && "$NIFT_BIN" track ../escape 'Traversal probe' >"$TMP_ROOT/traversal.log" 2>&1); then
   fail 'track accepts ../ name that escapes configured content/output directories'
 fi
@@ -729,7 +740,7 @@ make_bad_user_deps_case(){
   local json="$2"
   local d="$TMP_ROOT/user-deps-bad-$TESTS"
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1) || return
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1) || return
   (cd "$d" && "$NIFT_BIN" build-all >/dev/null 2>&1) || return
   printf '%s\n' "$json" >"$d/content/index.deps.json"
   check_no_abort "$label" bash -c "cd '$d' && '$NIFT_BIN' build-updated"
@@ -744,7 +755,7 @@ make_user_dep_hash_case(){
   local label="$2"
   local d="$TMP_ROOT/user-dep-$mode"
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1) || { TESTS=$((TESTS+1)); fail "$label setup failed"; return; }
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1) || { TESTS=$((TESTS+1)); fail "$label setup failed"; return; }
   sed -i "s/\"incremental-mode\": \"modified\"/\"incremental-mode\": \"$mode\"/" "$d/.nift/config.json"
   mkdir -p "$d/data"
   printf 'ONE\n' >"$d/data/user.txt"
@@ -828,7 +839,7 @@ make_dirdep_nested_case hybrid 'hybrid-mode recursive directory @dep'
 TESTS=$((TESTS+1))
 INFOQUOTE="$TMP_ROOT/info-title-quote"
 mkdir -p "$INFOQUOTE"
-(cd "$INFOQUOTE" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$INFOQUOTE" && "$NIFT_BIN" init >/dev/null 2>&1)
 (cd "$INFOQUOTE" && "$NIFT_BIN" track quote-title 'A "quoted" title' >/dev/null 2>&1) || fail 'quoted-title info setup track failed'
 if (cd "$INFOQUOTE" && "$NIFT_BIN" build-names quote-title >/dev/null 2>&1); then
   python3 -S -m json.tool "$INFOQUOTE/.nift/public/quote-title.info.json" >/dev/null 2>&1 || fail 'quoted title corrupts generated page info JSON'
@@ -839,7 +850,7 @@ fi
 TESTS=$((TESTS+1))
 INFONAME="$TMP_ROOT/info-name-quote"
 mkdir -p "$INFONAME"
-(cd "$INFONAME" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$INFONAME" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$INFONAME" && "$NIFT_BIN" track 'q"name' >/dev/null 2>&1); then
   (cd "$INFONAME" && "$NIFT_BIN" build-names 'q"name' >/dev/null 2>&1) || fail 'quoted-name page failed to build'
   python3 -S -m json.tool "$INFONAME/.nift/public/q\"name.info.json" >/dev/null 2>&1 || fail 'quoted tracked name corrupts generated page info JSON'
@@ -852,7 +863,7 @@ make_copy_move_quote_roundtrip(){
   local label="$2"
   local d="$TMP_ROOT/${op}-quote-roundtrip"
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1)
   TESTS=$((TESTS+1))
   if (cd "$d" && "$NIFT_BIN" "$op" / 'q"x' >/dev/null 2>&1); then
     local ilog="$TMP_ROOT/${op}-quote-info.log"
@@ -869,7 +880,7 @@ make_copy_move_quote_roundtrip mv 'mv quoted-name round trip'
 TESTS=$((TESTS+1))
 INFOTPL="$TMP_ROOT/info-template-quote"
 mkdir -p "$INFOTPL"
-(cd "$INFOTPL" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$INFOTPL" && "$NIFT_BIN" init >/dev/null 2>&1)
 cp "$INFOTPL/templates/template.html" "$INFOTPL/templates/q\"template.html"
 if (cd "$INFOTPL" && "$NIFT_BIN" track qtpl 'Quoted template' 'templates/q"template.html' >/dev/null 2>&1); then
   (cd "$INFOTPL" && "$NIFT_BIN" build-names qtpl >/dev/null 2>&1) || fail 'quoted-template page failed to build'
@@ -921,7 +932,7 @@ make_dirdep_nested_add_case hybrid 'hybrid-mode recursive directory @dep nested 
 TESTS=$((TESTS+1))
 WEXTQUOTE="$TMP_ROOT/watch-ext-quote"
 mkdir -p "$WEXTQUOTE/content/w"
-(cd "$WEXTQUOTE" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$WEXTQUOTE" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf 'X\n' >"$WEXTQUOTE/content/w/a.\"x"
 if (cd "$WEXTQUOTE" && "$NIFT_BIN" watch content/w/ '."x' templates/template.html .html >/dev/null 2>&1); then
   python3 -S -m json.tool "$WEXTQUOTE/.nift/.watch/content/w/exts.json" >/dev/null 2>&1 || fail 'quoted watched content extension corrupts exts.json'
@@ -930,7 +941,7 @@ fi
 TESTS=$((TESTS+1))
 WOUTQUOTE="$TMP_ROOT/watch-output-ext-quote"
 mkdir -p "$WOUTQUOTE/content/w"
-(cd "$WOUTQUOTE" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$WOUTQUOTE" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf 'X\n' >"$WOUTQUOTE/content/w/a.html"
 if (cd "$WOUTQUOTE" && "$NIFT_BIN" watch content/w/ .html templates/template.html '."out' >/dev/null 2>&1); then
   python3 -S -m json.tool "$WOUTQUOTE/.nift/.watch/content/w/exts.json" >/dev/null 2>&1 || fail 'quoted watched output extension corrupts exts.json'
@@ -958,7 +969,7 @@ fi
 TESTS=$((TESTS+1))
 AUTO="$TMP_ROOT/build-auto-hash"
 mkdir -p "$AUTO"
-(cd "$AUTO" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$AUTO" && "$NIFT_BIN" init >/dev/null 2>&1)
 sed -i 's/"incremental-mode":[[:space:]]*"modified"/"incremental-mode": "hash"/' "$AUTO/.nift/config.json"
 (cd "$AUTO" && "$NIFT_BIN" build-all >/dev/null 2>&1)
 (cd "$AUTO" && "$NIFT_BIN" build-auto -s >"$TMP_ROOT/build-auto.log" 2>&1) &
@@ -985,7 +996,7 @@ wait "$auto_pid" >/dev/null 2>&1 || true
 TESTS=$((TESTS+1))
 INFO_MULTI="$TMP_ROOT/info-multi"
 mkdir -p "$INFO_MULTI"
-(cd "$INFO_MULTI" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$INFO_MULTI" && "$NIFT_BIN" init >/dev/null 2>&1)
 (cd "$INFO_MULTI" && "$NIFT_BIN" track second 'Second page' >/dev/null 2>&1)
 (cd "$INFO_MULTI" && "$NIFT_BIN" info / second >"$TMP_ROOT/info-multi.log" 2>&1) || fail 'info with multiple names failed'
 python3 -S - "$TMP_ROOT/info-multi.log" <<'PY' || fail 'info repeats requested names instead of reporting each once'
@@ -999,7 +1010,7 @@ PY
 # Watch metadata structural corruption must be rejected without RapidJSON aborts.
 WATCH_STRUCT="$TMP_ROOT/watch-struct"
 mkdir -p "$WATCH_STRUCT/content/w"
-(cd "$WATCH_STRUCT" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$WATCH_STRUCT" && "$NIFT_BIN" init >/dev/null 2>&1)
 (cd "$WATCH_STRUCT" && "$NIFT_BIN" watch content/w/ >/dev/null 2>&1) || fail 'watch structural-corruption setup failed'
 printf '%s\n' '{"watched":[123]}' >"$WATCH_STRUCT/.nift/.watch/watched.json"
 check_no_abort 'watched.json with non-string array member' bash -c "cd '$WATCH_STRUCT' && '$NIFT_BIN' info-watching"
@@ -1007,7 +1018,7 @@ check_no_abort 'watched.json with non-string array member' bash -c "cd '$WATCH_S
 make_bad_exts_case(){
   local label="$1" json="$2" dir="$TMP_ROOT/exts-struct-${TESTS}"
   mkdir -p "$dir/content/w"
-  (cd "$dir" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$dir" && "$NIFT_BIN" init >/dev/null 2>&1)
   (cd "$dir" && "$NIFT_BIN" watch content/w/ >/dev/null 2>&1) || { TESTS=$((TESTS+1)); fail "$label setup failed"; return; }
   printf '%s\n' "$json" >"$dir/.nift/.watch/content/w/exts.json"
   check_no_abort "$label" bash -c "cd '$dir' && '$NIFT_BIN' info-watching"
@@ -1024,7 +1035,7 @@ make_bad_exts_case 'watched exts.json entry with non-string output-ext' '{"exts"
 TESTS=$((TESTS+1))
 QNAME="$TMP_ROOT/quote-name"
 mkdir -p "$QNAME"
-(cd "$QNAME" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$QNAME" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$QNAME" && "$NIFT_BIN" track 'quo"te' 'Quote name' >/dev/null 2>&1); then
   python3 -S -m json.tool "$QNAME/.nift/tracked.json" >/dev/null 2>&1 || fail 'track name containing double quote corrupts tracked.json'
   (cd "$QNAME" && "$NIFT_BIN" info 'quo"te' >/dev/null 2>&1) || fail 'project cannot reopen after quoted tracked name is saved'
@@ -1033,7 +1044,7 @@ fi
 TESTS=$((TESTS+1))
 QWATCH="$TMP_ROOT/quote-watch"
 mkdir -p "$QWATCH/content/q\"dir"
-(cd "$QWATCH" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$QWATCH" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$QWATCH" && "$NIFT_BIN" watch 'content/q"dir/' >/dev/null 2>&1); then
   python3 -S -m json.tool "$QWATCH/.nift/.watch/watched.json" >/dev/null 2>&1 || fail 'watch directory containing double quote corrupts watched.json'
   (cd "$QWATCH" && "$NIFT_BIN" info-watching >/dev/null 2>&1) || fail 'watch list cannot reopen after quoted directory is saved'
@@ -1044,7 +1055,7 @@ TESTS=$((TESTS+1))
 CPTRAV_PARENT="$TMP_ROOT/cp-traversal-parent"
 CPTRAV="$CPTRAV_PARENT/project"
 mkdir -p "$CPTRAV"
-(cd "$CPTRAV" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$CPTRAV" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$CPTRAV" && "$NIFT_BIN" cp / ../copied-outside >"$TMP_ROOT/cp-traversal.log" 2>&1); then
   fail 'cp accepts ../ destination that escapes configured content/output directories'
 fi
@@ -1054,7 +1065,7 @@ TESTS=$((TESTS+1))
 MVTRAV_PARENT="$TMP_ROOT/mv-traversal-parent"
 MVTRAV="$MVTRAV_PARENT/project"
 mkdir -p "$MVTRAV"
-(cd "$MVTRAV" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$MVTRAV" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$MVTRAV" && "$NIFT_BIN" mv / ../moved-outside >"$TMP_ROOT/mv-traversal.log" 2>&1); then
   fail 'mv accepts ../ destination that escapes configured content/output directories'
 fi
@@ -1064,7 +1075,7 @@ fi
 TESTS=$((TESTS+1))
 CPQUOTE="$TMP_ROOT/cp-quote"
 mkdir -p "$CPQUOTE"
-(cd "$CPQUOTE" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$CPQUOTE" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$CPQUOTE" && "$NIFT_BIN" cp / 'copy"quote' >/dev/null 2>&1); then
   python3 -S -m json.tool "$CPQUOTE/.nift/tracked.json" >/dev/null 2>&1 || fail 'cp destination containing double quote corrupts tracked.json'
 fi
@@ -1072,7 +1083,7 @@ fi
 TESTS=$((TESTS+1))
 MVQUOTE="$TMP_ROOT/mv-quote"
 mkdir -p "$MVQUOTE"
-(cd "$MVQUOTE" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$MVQUOTE" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$MVQUOTE" && "$NIFT_BIN" mv / 'move"quote' >/dev/null 2>&1); then
   python3 -S -m json.tool "$MVQUOTE/.nift/tracked.json" >/dev/null 2>&1 || fail 'mv destination containing double quote corrupts tracked.json'
 fi
@@ -1081,7 +1092,7 @@ fi
 TESTS=$((TESTS+1))
 OPTJSON="$TMP_ROOT/optional-json-types"
 mkdir -p "$OPTJSON"
-(cd "$OPTJSON" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$OPTJSON" && "$NIFT_BIN" init >/dev/null 2>&1)
 python3 -S - <<PY2
 import json
 p='$OPTJSON/.nift/tracked.json'
@@ -1101,7 +1112,7 @@ if [[ $had_errexit -eq 1 ]]; then set -e; fi
 TESTS=$((TESTS+1))
 CFGSTRUCT="$TMP_ROOT/config-struct"
 mkdir -p "$CFGSTRUCT"
-(cd "$CFGSTRUCT" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$CFGSTRUCT" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf '%s\n' '{"config":[]}' >"$CFGSTRUCT/.nift/config.json"
 check_no_abort 'config.json with non-object config member' bash -c "cd '$CFGSTRUCT' && '$NIFT_BIN' info-all"
 
@@ -1109,7 +1120,7 @@ check_no_abort 'config.json with non-object config member' bash -c "cd '$CFGSTRU
 TESTS=$((TESTS+1))
 LOOP="$TMP_ROOT/input-loop"
 mkdir -p "$LOOP"
-(cd "$LOOP" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$LOOP" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf '%s\n' '@input("templates/template.html")' >"$LOOP/templates/template.html"
 had_errexit=0
 case $- in *e*) had_errexit=1; set +e ;; esac
@@ -1121,7 +1132,7 @@ if [[ $had_errexit -eq 1 ]]; then set -e; fi
 TESTS=$((TESTS+1))
 ILOOP="$TMP_ROOT/indirect-input-loop"
 mkdir -p "$ILOOP/templates"
-(cd "$ILOOP" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$ILOOP" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf '%s\n' '@input("templates/a.html")' >"$ILOOP/templates/template.html"
 printf '%s\n' '@input("templates/b.html")' >"$ILOOP/templates/a.html"
 printf '%s\n' '@input("templates/a.html")' >"$ILOOP/templates/b.html"
@@ -1136,7 +1147,7 @@ if [[ $had_errexit -eq 1 ]]; then set -e; fi
 TESTS=$((TESTS+1))
 WESC="$TMP_ROOT/watch-escape"
 mkdir -p "$WESC/content" "$WESC/outside"
-(cd "$WESC" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$WESC" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$WESC" && "$NIFT_BIN" watch 'content/../outside/' >"$TMP_ROOT/watch-escape.log" 2>&1); then
   fail 'watch accepts content/../ path that escapes configured content directory'
 fi
@@ -1153,7 +1164,7 @@ done
 TESTS=$((TESTS+1))
 ESCJSON="$TMP_ROOT/json-escape-more"
 mkdir -p "$ESCJSON"
-(cd "$ESCJSON" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$ESCJSON" && "$NIFT_BIN" init >/dev/null 2>&1)
 (cd "$ESCJSON" && "$NIFT_BIN" track slash-title 'C:\tmp\site' >/dev/null 2>&1) || fail 'track title with backslashes failed'
 python3 -S -m json.tool "$ESCJSON/.nift/tracked.json" >/dev/null 2>&1 || fail 'track title containing backslashes corrupts tracked.json'
 (cd "$ESCJSON" && "$NIFT_BIN" info slash-title >"$TMP_ROOT/slash-title.log" 2>&1) || fail 'project cannot reopen title containing backslashes'
@@ -1174,7 +1185,7 @@ for spec in 'track:nested/../../escape' 'cp:nested/../../copyescape' 'mv:nested/
   PARENT="$TMP_ROOT/${op}-embedded-traversal-parent"
   PROJ="$PARENT/project"
   mkdir -p "$PROJ"
-  (cd "$PROJ" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$PROJ" && "$NIFT_BIN" init >/dev/null 2>&1)
   if [[ $op == track ]]; then
     (cd "$PROJ" && "$NIFT_BIN" track "$dest" 'Traversal' >/dev/null 2>&1); rc=$?
   else
@@ -1187,7 +1198,7 @@ done
 TESTS=$((TESTS+1))
 WESC2="$TMP_ROOT/watch-escape-deep"
 mkdir -p "$WESC2/content/sub" "$WESC2/outside"
-(cd "$WESC2" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$WESC2" && "$NIFT_BIN" init >/dev/null 2>&1)
 if (cd "$WESC2" && "$NIFT_BIN" watch 'content/sub/../../outside/' >/dev/null 2>&1); then
   fail 'watch accepts nested ../ path that escapes configured content directory'
 fi
@@ -1222,7 +1233,7 @@ make_dirdep_mode_case hybrid 'hybrid-mode directory @dep'
 TESTS=$((TESTS+1))
 WCUSTOM="$TMP_ROOT/watch-custom-ext"
 mkdir -p "$WCUSTOM/content/docs"
-(cd "$WCUSTOM" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$WCUSTOM" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf '%s\n' '@content' >"$WCUSTOM/templates/md-template.html"
 printf 'MARKDOWNISH\n' >"$WCUSTOM/content/docs/a.md"
 (cd "$WCUSTOM" && "$NIFT_BIN" watch content/docs/ .md templates/md-template.html .txt >/dev/null 2>&1) || fail 'custom-extension watch setup failed'
@@ -1236,7 +1247,7 @@ grep -Fq 'public/docs/a.txt' "$TMP_ROOT/watch-custom-info.log" || fail 'custom w
 TESTS=$((TESTS+1))
 WDUP="$TMP_ROOT/watch-duplicate-ext"
 mkdir -p "$WDUP/content/w"
-(cd "$WDUP" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$WDUP" && "$NIFT_BIN" init >/dev/null 2>&1)
 (cd "$WDUP" && "$NIFT_BIN" watch content/w/ >/dev/null 2>&1)
 cat >"$WDUP/.nift/.watch/content/w/exts.json" <<'JSON'
 {"exts":[{"content-ext":".html","template":"templates/template.html","output-ext":".html"},{"content-ext":".html","template":"templates/template.html","output-ext":".txt"}]}
@@ -1266,7 +1277,7 @@ make_unchanged_dirdep_case(){
   local d="$TMP_ROOT/v09-unchanged-dirdep-$mode"
   TESTS=$((TESTS+1))
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1)
   sed -i "s/\"incremental-mode\": \"modified\"/\"incremental-mode\": \"$mode\"/" "$d/.nift/config.json"
   mkdir -p "$d/data-dir"
   printf 'A\n' >"$d/data-dir/a.txt"
@@ -1291,7 +1302,7 @@ make_touch_only_dep_case(){
   local d="$TMP_ROOT/v09-touch-dep-$mode"
   TESTS=$((TESTS+1))
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1)
   sed -i "s/\"incremental-mode\": \"modified\"/\"incremental-mode\": \"$mode\"/" "$d/.nift/config.json"
   printf 'UNCHANGED\n' >"$d/data.txt"
   printf '%s\n' '@dep("data.txt")!' '@content' >"$d/templates/template.html"
@@ -1319,7 +1330,7 @@ make_touch_only_userdep_case(){
   local d="$TMP_ROOT/v09-touch-userdep-$mode"
   TESTS=$((TESTS+1))
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1)
   sed -i "s/\"incremental-mode\": \"modified\"/\"incremental-mode\": \"$mode\"/" "$d/.nift/config.json"
   mkdir -p "$d/data"
   printf 'UNCHANGED\n' >"$d/data/user.txt"
@@ -1347,7 +1358,7 @@ make_unchanged_userdirdep_case(){
   local d="$TMP_ROOT/v09-unchanged-userdir-$mode"
   TESTS=$((TESTS+1))
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1)
   sed -i "s/\"incremental-mode\": \"modified\"/\"incremental-mode\": \"$mode\"/" "$d/.nift/config.json"
   mkdir -p "$d/data-dir"
   printf 'A\n' >"$d/data-dir/a.txt"
@@ -1368,7 +1379,7 @@ make_unchanged_userdirdep_case hybrid 'hybrid-mode user-defined directory depend
 TESTS=$((TESTS+1))
 DHASH="$TMP_ROOT/v09-directory-hash-content"
 mkdir -p "$DHASH"
-(cd "$DHASH" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$DHASH" && "$NIFT_BIN" init >/dev/null 2>&1)
 sed -i 's/"incremental-mode": "modified"/"incremental-mode": "hash"/' "$DHASH/.nift/config.json"
 mkdir -p "$DHASH/data-dir"
 printf 'A\n' >"$DHASH/data-dir/a.txt"
@@ -1387,7 +1398,7 @@ fi
 TESTS=$((TESTS+1))
 DNHASH="$TMP_ROOT/v09-directory-hash-nested"
 mkdir -p "$DNHASH"
-(cd "$DNHASH" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$DNHASH" && "$NIFT_BIN" init >/dev/null 2>&1)
 sed -i 's/"incremental-mode": "modified"/"incremental-mode": "hash"/' "$DNHASH/.nift/config.json"
 mkdir -p "$DNHASH/data-dir/sub"
 printf 'A\n' >"$DNHASH/data-dir/sub/a.txt"
@@ -1408,7 +1419,7 @@ fi
 TESTS=$((TESTS+1))
 DRENAME="$TMP_ROOT/v09-directory-hash-rename"
 mkdir -p "$DRENAME"
-(cd "$DRENAME" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$DRENAME" && "$NIFT_BIN" init >/dev/null 2>&1)
 sed -i 's/"incremental-mode": "modified"/"incremental-mode": "hash"/' "$DRENAME/.nift/config.json"
 mkdir -p "$DRENAME/data-dir"
 printf 'SAME\n' >"$DRENAME/data-dir/a.txt"
@@ -1426,7 +1437,7 @@ fi
 TESTS=$((TESTS+1))
 DNRENAME="$TMP_ROOT/v09-directory-hash-nested-rename"
 mkdir -p "$DNRENAME"
-(cd "$DNRENAME" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$DNRENAME" && "$NIFT_BIN" init >/dev/null 2>&1)
 sed -i 's/"incremental-mode": "modified"/"incremental-mode": "hash"/' "$DNRENAME/.nift/config.json"
 mkdir -p "$DNRENAME/data-dir/sub-a"
 printf 'SAME\n' >"$DNRENAME/data-dir/sub-a/a.txt"
@@ -1453,7 +1464,7 @@ make_touch_core_file_case(){
   local d="$TMP_ROOT/v09-touch-core-$mode-$target"
   TESTS=$((TESTS+1))
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1)
   sed -i "s/\"incremental-mode\": \"modified\"/\"incremental-mode\": \"$mode\"/" "$d/.nift/config.json"
   (cd "$d" && "$NIFT_BIN" build-all >/dev/null 2>&1) || { fail "$label baseline build failed"; return; }
   local file before after
@@ -1478,7 +1489,7 @@ make_touch_core_file_case hybrid template yes 'hybrid-mode template'
 # @json(path, name) and chained JSON data access.
 JSOND="$TMP_ROOT/json-bindings"
 mkdir -p "$JSOND"
-(cd "$JSOND" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$JSOND" && "$NIFT_BIN" init >/dev/null 2>&1)
 mkdir -p "$JSOND/data"
 cat >"$JSOND/data/site.json" <<'JSON'
 {
@@ -1535,7 +1546,7 @@ make_json_failure_case(){
   local name="$1" expected="$2" template="$3" data="${4:-}"
   local d="$TMP_ROOT/json-fail-$name"
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1)
   mkdir -p "$d/data"
   if [[ -n "$data" ]]; then printf '%s\n' "$data" >"$d/data/test.json"; fi
   printf '%s\n' "$template" >"$d/templates/template.html"
@@ -1570,7 +1581,7 @@ make_json_failure_case render-json-object 'cannot render JSON object' \
 
 JSONMISS="$TMP_ROOT/json-missing-file"
 mkdir -p "$JSONMISS"
-(cd "$JSONMISS" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$JSONMISS" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf '%s\n' '@json("data/nope.json", data)' >"$JSONMISS/templates/template.html"
 TESTS=$((TESTS+1))
 if (cd "$JSONMISS" && "$NIFT_BIN" build-all >log 2>&1); then
@@ -1581,7 +1592,7 @@ fi
 
 JSONTRAV="$TMP_ROOT/json-traversal/project"
 mkdir -p "$JSONTRAV"
-(cd "$JSONTRAV" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$JSONTRAV" && "$NIFT_BIN" init >/dev/null 2>&1)
 printf '{}\n' >"$TMP_ROOT/json-traversal/outside.json"
 printf '%s\n' '@json("../outside.json", data)' >"$JSONTRAV/templates/template.html"
 TESTS=$((TESTS+1))
@@ -1594,7 +1605,7 @@ fi
 # JSON files are ordinary page dependencies for incremental builds.
 JSONINC="$TMP_ROOT/json-incremental-modified"
 mkdir -p "$JSONINC"
-(cd "$JSONINC" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$JSONINC" && "$NIFT_BIN" init >/dev/null 2>&1)
 mkdir -p "$JSONINC/data"
 printf '{"value":"one"}\n' >"$JSONINC/data/state.json"
 printf '%s\n' '@json("data/state.json", data)' 'VALUE=$[data.value]' '@content' >"$JSONINC/templates/template.html"
@@ -1615,7 +1626,7 @@ make_json_hash_case(){
   local mode="$1"
   local d="$TMP_ROOT/json-incremental-$mode"
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1)
   sed -i "s/\"incremental-mode\": \"modified\"/\"incremental-mode\": \"$mode\"/" "$d/.nift/config.json"
   mkdir -p "$d/data"
   printf '{"value":"one"}\n' >"$d/data/state.json"
@@ -1640,7 +1651,7 @@ make_json_hash_case hybrid
 # and @for(...) { ... } structured control flow over bound JSON values.
 CF="$TMP_ROOT/control-flow"
 mkdir -p "$CF"
-(cd "$CF" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$CF" && "$NIFT_BIN" init >/dev/null 2>&1)
 mkdir -p "$CF/data"
 cat >"$CF/data/site.json" <<'JSON'
 {
@@ -1795,7 +1806,7 @@ run_test contains "$CF/public/index.html" 'NOSPACE_OBJ=alpha' '@for object pair 
 # Control-flow block indentation follows the directive insertion point, just like @input.
 CFI="$TMP_ROOT/control-flow-indentation"
 mkdir -p "$CFI"
-(cd "$CFI" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$CFI" && "$NIFT_BIN" init >/dev/null 2>&1)
 mkdir -p "$CFI/data" "$CFI/templates/partials"
 cat >"$CFI/data/site.json" <<'JSON'
 {"enabled":true,"disabled":false,"items":[{"name":"one","show":true},{"name":"two","show":false}]}
@@ -1872,7 +1883,7 @@ run_test contains "$CFI/public/index.html" '<div class="inline-if"><i>INLINE-IF<
 # Loop variables are scoped and nested loops can shadow then restore them.
 CFS="$TMP_ROOT/control-flow-shadow"
 mkdir -p "$CFS"
-(cd "$CFS" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$CFS" && "$NIFT_BIN" init >/dev/null 2>&1)
 mkdir -p "$CFS/data"
 cat >"$CFS/data/site.json" <<'JSON'
 {"groups":[{"name":"g1","items":[{"name":"a"},{"name":"b"}]},{"name":"g2","items":[{"name":"c"}]}]}
@@ -1904,7 +1915,7 @@ make_control_failure(){
   if [[ $# -ge 4 ]]; then data="$4"; fi
   local d="$TMP_ROOT/control-fail-$name"
   mkdir -p "$d"
-  (cd "$d" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+  (cd "$d" && "$NIFT_BIN" init >/dev/null 2>&1)
   mkdir -p "$d/data"
   printf '%s\n' "$data" >"$d/data/site.json"
   printf '%s\n' "$template" >"$d/templates/template.html"
@@ -1936,7 +1947,7 @@ make_control_failure duplicate-plain-else "plain else must be the final branch" 
 # when data changes.
 CFI="$TMP_ROOT/control-flow-incremental"
 mkdir -p "$CFI"
-(cd "$CFI" && "$NIFT_BIN" init .html >/dev/null 2>&1)
+(cd "$CFI" && "$NIFT_BIN" init >/dev/null 2>&1)
 mkdir -p "$CFI/data"
 printf '{"show":true,"items":["one"]}\n' >"$CFI/data/state.json"
 cat >"$CFI/templates/template.html" <<'EOF'

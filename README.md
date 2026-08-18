@@ -34,7 +34,7 @@ same externally observable contract.
 ## Layers
 
 `legacy/` contains the accumulated historical + ruthless black-box suite
-(currently 575 assertions/tests against the 4.0.2 development checkpoint).
+(the accumulated historical/ruthless assertions against the 4.0.2 development checkpoint).
 
 `contract/` contains the later focused executable-level contract modules that
 were previously kept beside the Nift source tree.
@@ -42,13 +42,19 @@ were previously kept beside the Nift source tree.
 `contract/parameter_interpolation_smoke.sh` is the 73-check contract for `$[...]`
 interpolation in textual `@function(...)` parameters. It was written red before
 implementation and now passes with the other focused modules. Its history
-preserves that test-first checkpoint; the current expected result is 17 green
-modules: the historical/ruthless module plus 16 focused modules.
+preserves that test-first checkpoint; the current expected result is 18 green
+modules: the historical/ruthless module plus 17 focused modules.
 
 `contract/template_optional_smoke.sh` protects the externally observable
 template-less tracked-entry contract: parsed direct content, compatibility with
 the historical empty-string form, templated/template-less dependency replacement,
 and scaffold output.
+
+`contract/init_targets_smoke.sh` protects the 4.0.2 initializer contract: the
+zero-argument HTML default, explicit generic extensions, PHP/neutral starter
+families, all named platform targets, target-extension rejection, generated
+provider files, and the deliberate removal diagnostics for positional extensions
+and `init-html`.
 
 `benchmarks/` contains optional scaling/performance/RSS regression guards.
 Performance is kept separate from correctness because absolute timings and RSS

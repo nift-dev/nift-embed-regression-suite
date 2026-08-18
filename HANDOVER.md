@@ -31,8 +31,9 @@ history; this repository owns black-box contract methodology.
   institutional context, including failure families, parameter
   interpolation coverage, and production-readiness responsibilities.
 
-The current baseline records 575 historical assertions plus 16 focused contract
-modules, reported by the runner as 17 green modules. Treat counts as checkpoint
+The current runner contains the historical/ruthless module plus 17 focused
+contract modules, for 18 modules total. The newest focused family protects Nift
+4.0.2 project initialization and platform targets. Treat counts as checkpoint
 facts, not the quality claim.
 
 ## Running

@@ -66,7 +66,7 @@ The project is both a browsable test website and a quiet shell regression suite.
 
 ## CLI / project-state tests
 - `version`, `help/about`, `commands/cmds`
-- `init .html`, `init-html`
+- `init` default scaffold; removed `init .html` / `init-html` diagnostics
 - `status` display modes
 - `info`, `info-all`, `info-names`, `info-tracking`, `info-watching`
 - `track`
@@ -111,7 +111,7 @@ Additional coverage includes:
 - whitespace before parameter delimiters and multiline formatted calls
 - intentionally unsupported backtick quoting
 - square-bracket generic-call syntax probes
-- CLI aliases (`about`, `cmds`, `copy`, `move`, `del`, `init-html`)
+- CLI aliases (`about`, `cmds`, `copy`, `move`, `del`) plus removed-init diagnostics
 - custom extension preservation through copy/move/delete
 - multi-name `untrack` and `rm`
 - project discovery from nested working directories

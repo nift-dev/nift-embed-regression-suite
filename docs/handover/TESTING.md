@@ -47,6 +47,20 @@ Keep the independent repository canonical for externally observable behavior or
 establish another explicit policy, then enforce expected equality mechanically;
 do not let two manually maintained copies become competing contracts.
 
+### Init and platform-target contract
+
+Nift 4.0.2 deliberately changes project initialization. `nift init` is the HTML
+default, `--ext=.ext` selects a generic content/output extension, and
+`--target=<platform>` selects one of the supported static-host presets. The old
+positional extension and `init-html` forms are removal diagnostics rather than
+compatibility aliases.
+
+`contract/init_targets_smoke.sh` independently checks the default/PHP/neutral
+starter families, all eight target project shapes, target-extension rejection,
+provider configuration/output artifacts, preservation of an existing `.gitignore`,
+and the removed-spelling diagnostics. The historical runner was migrated to the
+new default while retaining explicit checks that the removed forms fail.
+
 ## Methodology
 
 ```text
