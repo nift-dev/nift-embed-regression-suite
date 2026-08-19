@@ -163,8 +163,8 @@ expect_build_failure "$P" 'json: name must be an identifier' 'JSON binding names
 # objects cannot be rendered into a textual function parameter.
 for kind in array object; do
   P="$TMP/type-$kind"; make_project "$P"
-  if [[ "$kind" == array ]]; then value='["x"]'; diagnostic='cannot render JSON array'
-  else value='{"x":1}'; diagnostic='cannot render JSON object'; fi
+  if [[ "$kind" == array ]]; then value='["x"]'; diagnostic='parameter expression must resolve to a scalar value'
+  else value='{"x":1}'; diagnostic='parameter expression must resolve to a scalar value'; fi
   printf '{"value":%s}\n' "$value" >"$P/data/selector.json"
   cat >"$P/templates/template.html" <<'EOF'
 @json("data/selector.json", selector)

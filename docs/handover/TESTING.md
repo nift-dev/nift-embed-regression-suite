@@ -21,6 +21,20 @@ the historical tests mutate only a temporary suite copy, while focused modules
 create their own temporary projects. Performance/RSS benchmarks and sanitizer
 instrumentation were not part of this correctness baseline.
 
+### Current v4.0.3 contract reconciliation (2026-08-19)
+
+The canonical runner now comprises 20 modules: the 578-assertion historical/
+ruthless layer plus 19 focused executable-level contract modules. After the
+exactly-once `@content` rule landed, historical positive fixtures that executed
+content repeatedly were converted to isolated token-boundary probes and an
+explicit duplicate-content failure. The focused parser-content contract retains
+nested-`@input`, skipped-branch, comment, zero-use, and duplicate-use coverage.
+
+The expression-aware parameter resolver now reports
+`parameter expression must resolve to a scalar value` when an array/object is
+used in a textual directive parameter. The independent interpolation module was
+updated to that deliberate diagnostic while preserving rejection behavior.
+
 ### Parameter-interpolation checkpoint
 
 `contract/parameter_interpolation_smoke.sh` deliberately specified the feature

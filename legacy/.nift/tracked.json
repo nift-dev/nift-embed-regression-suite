@@ -133,11 +133,6 @@
       "template": "templates/base.html"
     },
     {
-      "name": "parser/function-boundaries",
-      "title": "Function Name Boundaries",
-      "template": "templates/function-boundaries.html"
-    },
-    {
       "name": "input/special-filenames",
       "title": "Input Special Filenames",
       "template": "templates/input-special.html"
@@ -151,11 +146,6 @@
       "name": "environment-literal",
       "title": "Environment Literal",
       "template": "templates/env-literal.html"
-    },
-    {
-      "name": "basic/repeated-content",
-      "title": "Repeated Content",
-      "template": "templates/repeated-content.html"
     }
   ]
 }

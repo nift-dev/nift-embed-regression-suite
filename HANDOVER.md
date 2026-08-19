@@ -31,10 +31,11 @@ history; this repository owns black-box contract methodology.
   institutional context, including failure families, parameter
   interpolation coverage, and production-readiness responsibilities.
 
-The current runner contains the historical/ruthless module plus 17 focused
-contract modules, for 18 modules total. The newest focused family protects Nift
-4.0.2 project initialization and platform targets. Treat counts as checkpoint
-facts, not the quality claim.
+The current runner contains the historical/ruthless module plus 19 focused
+contract modules, for 20 modules total. The focused layer now includes the v4.0.3
+pagination and composable collection-operation contracts alongside the 4.0.2
+initializer/platform-target contract. Treat counts as checkpoint facts, not the
+quality claim.
 
 ## Running
 
@@ -105,3 +106,18 @@ roadmap impact.
 ## v4.0.3 shorthand ternary follow-up (2026-08-19)
 
 - The mirrored control-flow contract now covers `$[condition ? true-branch]`, including false-branch laziness and nested shorthand selection, alongside the full `$[condition ? true : false]` form.
+
+## v4.0.3 exactly-once content reconciliation (2026-08-19)
+
+The historical/ruthless fixture was reconciled with the deliberate v4.0.3 rule
+that a templated tracked item must execute exactly one `@content` across its
+executed template/`@input` graph. The old positive repeated-content fixture is no
+longer treated as valid behavior; duplicate content is now an expected failure.
+Function-name boundary probes that previously placed several `@content` calls in
+one template are isolated into one-build-per-boundary cases so they still protect
+tokenization without violating the new contract.
+
+The parameter-interpolation contract also expects the current expression-aware
+scalar-parameter diagnostic (`parameter expression must resolve to a scalar value`)
+for array/object values. This is an intentional diagnostic reconciliation, not a
+loosening of the parameter contract.

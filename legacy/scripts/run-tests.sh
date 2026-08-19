@@ -45,18 +45,6 @@ run_test contains public/basic/content-in-partial.html 'CONTENT-IN-PARTIAL' '@co
 run_test contains public/basic/content-in-partial.html '<slot>' '@content partial wrapper rendered'
 
 
-# Function-name boundaries after the v0.5 simplification: only lower-case letters
-# belong to an @ function name. HTML/punctuation/digits/uppercase must terminate it.
-FB=public/parser/function-boundaries.html
-run_test contains "$FB" 'BOUNDARY-CONTENT<div class="after">AFTER-OPEN</div>' '@content stops before opening HTML tag'
-run_test contains "$FB" 'BOUNDARY-CONTENT</main>' '@content stops before closing HTML tag'
-run_test contains "$FB" 'BOUNDARY-CONTENT1' '@content stops before digit'
-run_test contains "$FB" 'BOUNDARY-CONTENT_suffix' '@content stops before underscore'
-run_test contains "$FB" 'BOUNDARY-CONTENT-after' '@content stops before dash'
-run_test contains "$FB" 'BOUNDARY-CONTENT:after' '@content stops before colon'
-run_test contains "$FB" 'BOUNDARY-CONTENTX' '@content stops before uppercase suffix'
-run_test contains "$FB" 'UPPER_NAME=@Content' 'uppercase function name remains literal'
-
 # @input: project-root, nested, relative-to-read-file, spaces, recursive.
 run_test contains public/input/basic.html 'SHARED-PARTIAL-v1' '@input project-root path'
 run_test contains public/input/basic.html 'RELATIVE-PARENT-BEGIN' '@input nested parent'
@@ -114,7 +102,6 @@ run_test contains public/environment.html 'UNSET=' '@getenv unset variable yield
 
 
 run_test contains public/environment-literal.html 'RAW=@content $[title] <tag>& literal' '@getenv output is literal and not reparsed'
-[[ "$(grep -Fc 'REPEAT-MARKER' public/basic/repeated-content.html)" -eq 2 ]] || fail '@content may be used twice and should insert content twice'
 
 # Every @ent mapping currently implemented.
 while IFS= read -r expected; do
@@ -236,7 +223,8 @@ expect_failure 'getenv-two-params' 'getenv: expected 1 parameter' $'@getenv("A",
 expect_failure 'ent-invalid' 'do not currently have an entity value' $'@ent("not-an-entity")\n@content\n'
 expect_failure 'dep-zero' 'dep: expected parameters' $'@dep()\n@content\n'
 expect_failure 'dep-missing' 'failed as dependency does not exist' $'@dep("missing.dep")\n@content\n'
-expect_failure 'content-not-used' 'has not been used as a dependency' $'template deliberately omits content\n'
+expect_failure 'content-not-used' 'must execute exactly one @content' $'template deliberately omits content\n'
+expect_failure 'content-used-twice' 'may be executed exactly once' $'@content\n@content\n' 'REPEAT-MARKER\n'
 expect_failure 'unclosed-pre' 'has no following </pre> close tag' $'<pre>\n@content\n'
 expect_failure 'orphan-pre-close' 'close tag has no preceding' $'</pre>\n@content\n'
 expect_failure 'unclosed-raw-comment' "open comment '<#--' has no close '--#>'" $'<#-- never closes\n@content\n'
@@ -335,6 +323,17 @@ d=$(make_failure_project 'failed-build-exit-status' $'@input("missing")\n@conten
 # Public string/path examples use only single and double quotes.
 
 # Function-name boundary probes.
+# The exactly-once @content contract means each boundary form is isolated in its
+# own tracked build rather than combining several @content executions in one template.
+# Only lower-case letters belong to an @ function name; punctuation, digits,
+# underscores and uppercase letters terminate it.
+expect_success_output 'content-before-digit' 'BOUNDARY-CONTENT1' $'@content1\n' 'BOUNDARY-CONTENT'
+expect_success_output 'content-before-underscore' 'BOUNDARY-CONTENT_suffix' $'@content_suffix\n' 'BOUNDARY-CONTENT'
+expect_success_output 'content-before-dash' 'BOUNDARY-CONTENT-after' $'@content-after\n' 'BOUNDARY-CONTENT'
+expect_success_output 'content-before-colon' 'BOUNDARY-CONTENT:after' $'@content:after\n' 'BOUNDARY-CONTENT'
+expect_success_output 'content-before-uppercase-suffix' 'BOUNDARY-CONTENTX' $'@contentX\n' 'BOUNDARY-CONTENT'
+expect_success_output 'uppercase-function-literal' 'UPPER_NAME=@Content' $'UPPER_NAME=@Content\n@content\n' 'BOUNDARY-CONTENT'
+
 # A zero-parameter @content call should stop before ordinary HTML markup.
 # These remain isolated so boundary regressions cannot make the main positive website unbuildable.
 
