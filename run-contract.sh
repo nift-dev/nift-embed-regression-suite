@@ -48,6 +48,7 @@ for test in \
   comments_smoke.sh \
   json_binding_smoke.sh \
   control_flow_smoke.sh \
+  pagination_smoke.sh \
   requirements_smoke.sh \
   path_security_smoke.sh \
   path_safety_smoke.sh \

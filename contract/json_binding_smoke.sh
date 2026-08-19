@@ -230,3 +230,60 @@ printf '%s\n' '@json("data/test.json", data, "data/test.schema.json")' '@content
 
 echo "JSON Schema integration adversarial extensions passed"
 
+
+# @join renders scalar JSON arrays with a textual/interpolated separator.
+cd "$TMP"
+rm -rf .nift content templates public data
+mkdir -p .nift content templates public data
+cat > .nift/config.json <<'JSON'
+{"config":{"content-dir":"content/","content-ext":".html","output-dir":"public/","output-ext":".html","default-template":"templates/template.html","build-threads":-1,"incremental-mode":"modified"}}
+JSON
+cat > .nift/tracked.json <<'JSON'
+{"tracked":[{"name":"/","title":"join","template":"templates/template.html"}]}
+JSON
+cat > templates/template.html <<'EOF2'
+@content
+EOF2
+cat > data/join.json <<'JSON'
+{"tags":["C++","Nift","tooling"],"mixed":[1,true,null,"x"],"bad":[{"x":1}]}
+JSON
+cat > content/index.html <<'EOF2'
+@json('data/join.json', d)
+@join(d.tags, ', ')
+@join($[d.mixed], '|')
+EOF2
+"$NIFT_BIN" build-all >/dev/null
+grep -F 'C++, Nift, tooling' public/index.html >/dev/null
+grep -F '1|true|null|x' public/index.html >/dev/null
+cat > content/index.html <<'EOF2'
+@json('data/join.json', d)
+@join(d.bad, ',')
+EOF2
+if "$NIFT_BIN" build-all >/dev/null 2>&1; then echo '@join accepted object item' >&2; exit 1; fi
+
+# @substr is zero-based, length-based, and slices on UTF-8 code-point boundaries.
+cd "$TMP"
+rm -rf .nift content templates public data
+mkdir -p .nift content templates public data
+cat > .nift/config.json <<'JSON'
+{"config":{"content-dir":"content/","content-ext":".html","output-dir":"public/","output-ext":".html","default-template":"templates/template.html","build-threads":-1,"incremental-mode":"modified"}}
+JSON
+cat > .nift/tracked.json <<'JSON'
+{"tracked":[{"name":"/","title":"substr","template":"templates/template.html"}]}
+JSON
+cat > templates/template.html <<'EOF2'
+@content
+EOF2
+cat > data/substr.json <<'JSON'
+{"text":"café 😄 tooling"}
+JSON
+cat > content/index.html <<'EOF2'
+@json('data/substr.json', d)
+@substr($[d.text], 0, 4)|@substr($[d.text], 5, 1)|@substr($[d.text], 7, 99)|@substr($[d.text], 99, 3)|@substr($[d.text], 0, 0)
+EOF2
+"$NIFT_BIN" build-all >/dev/null
+grep -F 'café|😄|tooling||' public/index.html >/dev/null
+cat > content/index.html <<'EOF2'
+@substr('abc', -1, 2)
+EOF2
+if "$NIFT_BIN" build-all >/dev/null 2>&1; then echo '@substr accepted negative position' >&2; exit 1; fi
