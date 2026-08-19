@@ -27,7 +27,7 @@ export NIFT_TEST_VALUE='hello-env'
 export NIFT_TEST_LITERAL='@content $[title] <tag>& literal'
 
 TESTS=$((TESTS+1)); "$NIFT_BIN" version >"$TMP_ROOT/version.log" 2>&1 || fail 'nift version failed'
-grep -Fq 'v4.0.3' "$TMP_ROOT/version.log" || fail 'nift version did not report v4.0.3'
+grep -Fq 'v4.0.4' "$TMP_ROOT/version.log" || fail 'nift version did not report v4.0.4'
 TESTS=$((TESTS+1)); "$NIFT_BIN" commands >"$TMP_ROOT/commands.log" 2>&1 || fail 'nift commands failed'
 grep -Fq 'build(-updated)' "$TMP_ROOT/commands.log" || fail 'nift commands missing build(-updated) entry'
 
