@@ -101,3 +101,7 @@ roadmap impact.
 ## Project-contract coverage
 
 `contract/contracts_smoke.sh` is the implementation-independent executable contract for config-declared project contracts. It protects lazy JSON namespace resolution, dependency/config remapping, parameter/control-flow integration, collision/shadowing rejection, controlled failure diagnostics, and path containment. Keep it synchronized with the focused Nift source-tree copy without coupling it to Nift internals.
+
+## v4.0.3 shorthand ternary follow-up (2026-08-19)
+
+- The mirrored control-flow contract now covers `$[condition ? true-branch]`, including false-branch laziness and nested shorthand selection, alongside the full `$[condition ? true : false]` form.
