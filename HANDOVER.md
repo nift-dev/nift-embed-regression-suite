@@ -128,3 +128,8 @@ loosening of the parameter contract.
 - `contract/diagnostics_smoke.sh` independently protects source-location rendering for parser/build errors.
 - The fixture deliberately places an invalid `@pathto('/assets/css/style.css')` after two leading tabs, then verifies that redirected/plain diagnostics expand tabs deterministically and align the `^` marker with the directive rather than a visually shifted source column.
 - The contract also expects an underline spanning the offending call and preserves the existing path-containment diagnostic text. ANSI colour itself remains an implementation-level console test because the black-box contract runs with redirected stderr, where Nift must remain ANSI-free.
+## v4.0.4 ternary string-literal regression follow-up (2026-08-20)
+
+- The independent control-flow contract now protects the dogfood-found bug where selected quoted ternary branches leaked their source quote delimiters into rendered output.
+- Coverage includes full/shorthand ternaries, true/false branches, single/double quotes, empty and escaped strings, inline HTML attributes, nested ternaries, literal directive-looking strings, selected directive execution and unselected dependency laziness.
+- The contract deliberately preserves the existing distinction: quoted scalar branches render as values, while non-literal selected branches remain lazy Nift source.
