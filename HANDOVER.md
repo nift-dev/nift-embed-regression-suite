@@ -46,7 +46,9 @@ NIFT_BIN=/absolute/path/to/nift ./run-contract.sh
 ```
 
 Performance entry points are documented by `run-performance.sh` and scripts in
-`benchmarks/`. Absolute timings and RSS depend on the host; correctness does not.
+`benchmarks/`. The suite includes both tracked-project load scaling and full-build
+output scaling guards; preserve both because separate O(n²) regressions have
+existed in those two paths. Absolute timings and RSS depend on the host; correctness does not.
 
 ## Adding behavior
 

@@ -58,8 +58,11 @@ provider files, and the deliberate removal diagnostics for positional extensions
 and `init-html`.
 
 `benchmarks/` contains optional scaling/performance/RSS regression guards.
-Performance is kept separate from correctness because absolute timings and RSS
-are machine/platform dependent.
+`full_build_scaling_benchmark.py` specifically protects full-build output work
+from superlinear per-file filesystem behavior; it was added after transactional
+stale-temp recovery accidentally made flat full builds O(n²). Performance is
+kept separate from correctness because absolute timings and RSS are
+machine/platform dependent.
 
 Implementation-level C++ tests (for example direct JSON/JSON-Schema unit tests)
 remain with the Nift source repository and are intentionally not duplicated
