@@ -121,3 +121,10 @@ The parameter-interpolation contract also expects the current expression-aware
 scalar-parameter diagnostic (`parameter expression must resolve to a scalar value`)
 for array/object values. This is an intentional diagnostic reconciliation, not a
 loosening of the parameter contract.
+
+
+## Diagnostic rendering contract follow-up (2026-08-20)
+
+- `contract/diagnostics_smoke.sh` independently protects source-location rendering for parser/build errors.
+- The fixture deliberately places an invalid `@pathto('/assets/css/style.css')` after two leading tabs, then verifies that redirected/plain diagnostics expand tabs deterministically and align the `^` marker with the directive rather than a visually shifted source column.
+- The contract also expects an underline spanning the offending call and preserves the existing path-containment diagnostic text. ANSI colour itself remains an implementation-level console test because the black-box contract runs with redirected stderr, where Nift must remain ANSI-free.

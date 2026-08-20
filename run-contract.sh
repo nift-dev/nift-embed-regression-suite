@@ -45,6 +45,7 @@ run_module "historical + ruthless regression contract" \
 for test in \
   json_schema_integration_smoke.sh \
   parser_content_smoke.sh \
+  diagnostics_smoke.sh \
   comments_smoke.sh \
   json_binding_smoke.sh \
   control_flow_smoke.sh \
