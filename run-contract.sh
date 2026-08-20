@@ -60,6 +60,7 @@ for test in \
   parameter_interpolation_smoke.sh \
   contracts_smoke.sh \
   persistence_concurrency_failure_smoke.sh \
+  filesystem_recovery_smoke.sh \
   minify_integration_smoke.sh \
   template_optional_smoke.sh \
   init_targets_smoke.sh

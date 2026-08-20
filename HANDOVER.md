@@ -32,9 +32,9 @@ history; this repository owns black-box contract methodology.
   interpolation coverage, and production-readiness responsibilities.
 
 The current runner contains the historical/ruthless module plus 19 focused
-contract modules, for 20 modules total. The focused layer now includes the v4.0.3
-pagination and composable collection-operation contracts alongside the 4.0.2
-initializer/platform-target contract. Treat counts as checkpoint facts, not the
+contract modules, for 22 modules total. The focused layer now includes the v4.0.3
+pagination and composable collection-operation contracts, the v4.0.4 long-running
+filesystem-recovery contract, and the 4.0.2 initializer/platform-target contract. Treat counts as checkpoint facts, not the
 quality claim.
 
 ## Running
@@ -48,7 +48,9 @@ NIFT_BIN=/absolute/path/to/nift ./run-contract.sh
 Performance entry points are documented by `run-performance.sh` and scripts in
 `benchmarks/`. The suite includes both tracked-project load scaling and full-build
 output scaling guards; preserve both because separate O(n²) regressions have
-existed in those two paths. Absolute timings and RSS depend on the host; correctness does not.
+existed in those two paths. The source tree additionally carries a direct recovery-epoch
+scan-count guard; this suite independently protects the same user-visible recovery
+property through `contract/filesystem_recovery_smoke.sh`. Absolute timings and RSS depend on the host; correctness does not.
 
 ## Adding behavior
 
