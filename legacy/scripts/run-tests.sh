@@ -139,11 +139,14 @@ run_test contains public/blank.html 'BLANK-TEMPLATE-CONTENT &excl;' 'blank templ
 run_test exists public/custom/text.txt 'custom output extension created'
 run_test contains public/custom/text.txt 'CUSTOM-TEXT-CONTENT' 'custom content/output extension content'
 
-# Generated output permissions are read-only on Unix (skip where stat mode differs/unavailable).
+# Generated output preserves the source content file's permissions (skip where
+# stat mode differs/unavailable).
 if command -v stat >/dev/null 2>&1; then
   TESTS=$((TESTS+1))
+  source_mode="$(stat -c '%a' content/basic/content.html 2>/dev/null || true)"
   mode="$(stat -c '%a' public/basic/content.html 2>/dev/null || true)"
-  [[ "$mode" == "444" ]] || fail "generated output expected mode 444 on this Unix build, got '$mode'"
+  [[ -n "$source_mode" && "$mode" == "$source_mode" ]] ||
+    fail "generated output expected mode $source_mode (the source content file's permissions), got '$mode'"
 fi
 
 # ----- Incremental dependency graph tests -----
