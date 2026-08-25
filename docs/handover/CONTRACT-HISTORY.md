@@ -756,3 +756,16 @@ invocations fail with zero mutation and no `.unfinished`; the single-name
 grammar (`track a b` = name a, title b); re-track of a tracked page is a clean
 error; and `.unfinished` + `build --repair` is required only after a
 mutated-then-failed build.
+
+## Track ordering decision (2026-08-25)
+
+`track` now persists tracking state FIRST and then creates the missing content
+file (order B), replacing the previous content-before-save order (order A).
+Rationale: tracked.json is the authoritative project model, so the least-bad
+recoverable failure state is "tracked entry with a missing content file" (the
+next build reports precisely "content file does not exist", and recovery uses
+the standard build --repair path) rather than an orphan content file Nift has no
+knowledge of. No rollback or cross-filesystem transaction machinery is added.
+`track` still never participates in the build ownership epoch. `contract/track_smoke.sh`
+covers the B-state: failed content creation leaves truthful tracked metadata, no
+.unfinished from track itself, and the missing-content recovery path.

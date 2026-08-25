@@ -76,4 +76,35 @@ printf '<p>BAD-FIXED</p>\n' > content/bad.html
 test ! -e .nift/.unfinished || fail 'build --repair left the marker'
 "$NIFT_BIN" build >/dev/null 2>&1 || fail 'ordinary build failed after repair'
 
+# Ordering B: tracking state is persisted FIRST, then the content file is
+# created. A failed content creation must leave TRUTHFUL tracking metadata (the
+# next build reports "content file does not exist") rather than an orphan file
+# Nift knows nothing about. The failed track itself never creates .unfinished.
+cat > .nift/tracked.json <<'JSON'
+{"tracked":[{"name":"/","title":"index","template":"templates/template.html"}]}
+JSON
+rm -f content/alpha.html
+chmod 555 content
+set +e
+"$NIFT_BIN" track failpage >/dev/null 2>&1
+track_rc=$?
+set -e
+chmod 755 content
+[ "$track_rc" -ne 0 ] || fail 'track with uncreatable content succeeded'
+test ! -e .nift/.unfinished || fail 'failed track created .unfinished'
+grep -q '"name": "failpage"' .nift/tracked.json || fail 'tracked.json does not truthfully record the failed track'
+test -e content/failpage.html && fail 'failed track created the content file'
+# The next build reports the missing content precisely and recovery uses the
+# standard path: create the content file, build --repair, then ordinary build.
+set +e
+build_out="$("$NIFT_BIN" build 2>&1)"
+build_rc=$?
+set -e
+[ "$build_rc" -ne 0 ] || fail 'build with a tracked-but-missing content file succeeded'
+printf '%s' "$build_out" | grep -Fq 'content file does not exist' || fail 'build did not report the missing content file'
+printf '<p>recovered</p>\n' > content/failpage.html
+"$NIFT_BIN" build --repair >/dev/null 2>&1 || fail 'build --repair did not recover the missing-content state'
+test ! -e .nift/.unfinished || fail 'build --repair left the marker'
+"$NIFT_BIN" build >/dev/null 2>&1 || fail 'ordinary build failed after repair'
+
 echo 'Track transactionality / .unfinished contract smoke test passed'
