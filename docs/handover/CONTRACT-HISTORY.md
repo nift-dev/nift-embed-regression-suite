@@ -685,3 +685,16 @@ This rule is deliberate, not incidental. Lifecycle verification:
 
 Do not change this rule unless a lifecycle change makes a config-present /
 tracked-absent state a legitimate recovery target.
+
+## Embed host-resource contract: value / absent / error (2026-08-25, CP10.2)
+
+The Embed loader/environment provider contract is now `Found(value)` /
+`NotFound` / `Error(diagnostic)` in C++, nift-rs and the C ABI. A host error
+travels through the render computation itself (including the pagination
+worker threads) and fails the RenderResult with the diagnostic; `NotFound`
+remains the ordinary unset/missing case. The C ABI's previous thread_local
+callback-error side channel was removed - there is no ABI-only failure
+semantics; the engine models the contract directly. C++ `tests/host_seam.cpp`,
+Rust `nr15_host_seam.rs` and the C ABI adversarial battery cover standalone
+and paginated host failures, not-found vs present-empty, and deterministic
+concurrent attribution.
