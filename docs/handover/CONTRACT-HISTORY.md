@@ -568,3 +568,52 @@ That is the long-term objective.
 
 ---
 
+## CLI unification reconciliation (2026-08-25)
+
+The suite was reconciled with the unified CLI grammar (`nift build [names...]
+[--all|--auto|--repair]`, `nift info [names...] [--all|--watching|--tracking|
+--names]`), which removed the historical spellings `build-all`, `build-updated`,
+`build-names`, `build-auto`, `info-all`, `info-watching`, `info-tracking`,
+`info-names`. The removed spellings now fail with a replacement hint and perform
+no action, so the suite migrated every invocation to the unified form:
+
+```text
+build-all      -> build --all
+build-updated  -> build
+build-names X  -> build X
+build-auto     -> build --auto
+info-all       -> info --all
+info-watching  -> info --watching
+info-tracking  -> info --tracking
+info-names     -> info --names
+```
+
+Semantic adjustments recorded during the migration:
+
+- The old "build-names -p with no names must fail" check is obsolete: under the
+  unified grammar `build -p` (explain + incremental) is valid. It was replaced
+  with the mutually-exclusive-mode checks (`build --all <name>` and
+  `build --all --repair` must fail).
+- The `status` command now rejects unknown options and stray positional
+  arguments (consistent with build/info); the suite's status checks were
+  retained and now pass against the corrected implementation.
+- Failed mutating builds leave the durable `.unfinished` ownership marker
+  (CP2/CP3); a subsequent build is refused until `build --repair` reconstructs
+  and clears it. The pagination and persistence/concurrency failure modules now
+  exercise that recovery path explicitly where they intentionally induce a
+  failure after a mutation.
+- Recovery of crash-leftover `.nift-tmp-*` files was restored on the direct
+  (non-temp) build-output write path: the direct-write optimization (CP3) had
+  dropped the stale-temp recovery scan, so the filesystem-recovery module
+  failed. `write_direct_file` now performs the once-per-epoch-per-parent
+  recovery scan, and the module passes.
+
+## New focused modules (2026-08-25)
+
+- `contract/unified_cli_smoke.sh` -- unified grammar, mutually-exclusive modes,
+  unknown-option rejection, removed-spelling replacement hints, info JSON
+  modes, and clean-project `build --repair`.
+- `contract/pagination_complete_smoke.sh` -- CP8 complete pagination contract:
+  primary page + pages 2..N under canonical N>=2 names with no leading zeros,
+  per-page item windows ascending, non-paginated pages emitting only their
+  primary output, and single-page pagination emitting no page 2.

@@ -51,6 +51,8 @@ for test in \
   control_flow_smoke.sh \
   collection_ops_smoke.sh \
   pagination_smoke.sh \
+  pagination_complete_smoke.sh \
+  unified_cli_smoke.sh \
   requirements_smoke.sh \
   path_security_smoke.sh \
   path_safety_smoke.sh \

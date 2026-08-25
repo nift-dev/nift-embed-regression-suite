@@ -31,11 +31,14 @@ history; this repository owns black-box contract methodology.
   institutional context, including failure families, parameter
   interpolation coverage, and production-readiness responsibilities.
 
-The current runner contains the historical/ruthless module plus 19 focused
-contract modules, for 22 modules total. The focused layer now includes the v4.0.3
+The current runner contains the historical/ruthless module plus 23 focused
+contract modules, for 24 modules total. The focused layer includes the v4.0.3
 pagination and composable collection-operation contracts, the v4.0.4 long-running
-filesystem-recovery contract, and the 4.0.2 initializer/platform-target contract. Treat counts as checkpoint facts, not the
-quality claim.
+filesystem-recovery contract, the 4.0.2 initializer/platform-target contract,
+the unified-CLI grammar contract, and the complete-pagination (CP8) contract.
+Treat counts as checkpoint facts, not the quality claim. The suite is reconciled
+with the unified CLI grammar; see CONTRACT-HISTORY.md for the migration and the
+recovery/repair contract adjustments.
 
 ## Running
 

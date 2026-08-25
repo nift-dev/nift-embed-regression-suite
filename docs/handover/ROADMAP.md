@@ -12,7 +12,9 @@ coverage changes, or production confidence changes.
    including one-pass injection boundaries and A→B dependency/requirement
    lifecycle, without making parameters recursive Nift templates.
 3. Run and preserve all existing historical/focused coverage against the
-   candidate.
+   candidate. The suite is now reconciled with the unified CLI grammar and
+   includes the complete-pagination (CP8) and unified-CLI contracts; keep both
+   as permanent gates as the independent Rust implementation matures.
 4. Expand source-guided interaction tests around JSON, scope, control flow,
    dependencies, requirements, path containment, and failed-build recovery.
 5. Review relevant modified/hash/hybrid and watch-mode transitions.
