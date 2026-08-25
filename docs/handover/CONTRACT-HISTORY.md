@@ -710,3 +710,10 @@ and C ABI. The pagination-separator loader-error path is covered by parser-level
 custom-host tests in both implementations (the project render reads the
 separator from the project snapshot/filesystem, not the engine loader seam, so
 it is not expressible through the neutral corpus).
+
+## CP10.4 (2026-08-25)
+
+Rust pagination-template host errors are now preserved (NotFound keeps the
+canonical diagnostic, host Error keeps its own message), matching C++. The
+final semantic host-read audit found no remaining Error suppression in either
+implementation.
