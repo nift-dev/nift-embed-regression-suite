@@ -740,11 +740,14 @@ command left an unfinished-build marker" on the Warden/Cortex sites.
 - `.unfinished` + `build --repair` is the recovery path ONLY for a build that
   mutated generated state and then failed (reproduced: force-rebuild where one
   page succeeds and another fails). Ordinary builds refuse until repair.
-- The narrated incident cannot be reproduced from any plausible `track`
-  command. The marker almost certainly came from a subsequent build failure and
-  was misattributed to `track`; "repairing the tracking entry" was likely an
-  unnecessary manual edit. Classification F (cannot be reproduced; narration
-  unsupported). No Nift fix is required for the reported incident.
+- An AI agent reported that a malformed tracking command had left `.unfinished`,
+  but the original state was not independently captured. Investigation found
+  that `track` has no path that creates `.unfinished` and no tested malformed
+  tracking invocation produced one. The original report is therefore unverified
+  and its claimed cause is disproven. Classification F (cannot be reproduced;
+  narration unsupported). Whether `.unfinished` even existed at the time (let
+  alone who created it) was not established. No Nift fix is required for the
+  reported incident.
 - Minor observation (not the incident): `track` writes the content file before
   `save_tracking` commits, so a save failure (e.g. unwritable `.nift` dir)
   leaves an orphaned untracked content file. Candidate small improvement under
@@ -769,3 +772,12 @@ knowledge of. No rollback or cross-filesystem transaction machinery is added.
 `track` still never participates in the build ownership epoch. `contract/track_smoke.sh`
 covers the B-state: failed content creation leaves truthful tracked metadata, no
 .unfinished from track itself, and the missing-content recovery path.
+
+## C ABI callback diagnostic transport (2026-08-25, CP11.1)
+
+The shared corpus host-error expectations moved from the generic
+"host callback failed" to the exact supplied diagnostic: a hard callback status
+with a non-empty `out` preserves that `out` as the failed RenderResult
+diagnostic (empty `out` falls back to the generic message). All four adapters
+agree on `host exploded` / `getenv: host exploded` for the three host-error
+cases; corpus total remains 29/29.

@@ -221,16 +221,24 @@ def main():
         lib.nift_engine_set_environment_provider(engine, env, None)
 
     if seam == "env-error":
-        # Controlled host failure for @getenv (CP10.3): the render fails with
-        # "host callback failed".
+        # Controlled host failure with a supplied diagnostic (CP11): fill out
+        # and return NIFT_ERROR_CALLBACK.
         @EnvCb
         def env_error(user_data, name, name_len, out):
+            buf = b"host exploded"
+            keepalive.append(buf)
+            out.contents.data = buf
+            out.contents.length = len(buf)
             return NIFT_ERROR_CALLBACK
         lib.nift_engine_set_environment_provider(engine, env_error, None)
 
     if seam == "loader-error":
         @LoaderCb
         def loader_error(user_data, path, path_len, out):
+            buf = b"host exploded"
+            keepalive.append(buf)
+            out.contents.data = buf
+            out.contents.length = len(buf)
             return NIFT_ERROR_CALLBACK
         lib.nift_engine_set_loader(engine, loader_error, None)
 

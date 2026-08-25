@@ -15,6 +15,6 @@
   },
   "expected": {
     "ok": false,
-    "error": "getenv: host callback failed"
+    "error": "getenv: host exploded"
   }
 }
