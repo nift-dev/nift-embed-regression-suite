@@ -725,3 +725,34 @@ implementation-neutral Embed corpus as a fourth adapter (`embed/adapters/go-embe
 the frozen 29 cases now require C++ API == expectation, nift-rs == expectation,
 C ABI == expectation AND Go == expectation, with the negative anti-agreement
 self-test passing across all four.
+
+## Multi-name `track` incident — forensic classification (2026-08-25)
+
+Investigation of an AI-agent report that a "malformed multi-name tracking
+command left an unfinished-build marker" on the Warden/Cortex sites.
+
+- The unified CLI grammar is single-name: `track <name> [title] [template]`.
+  There is no multi-name form. `track a b` is VALID and tracks "a" with title
+  "b"; `track a b c d` / five names error "track received too many arguments".
+- `track` never acquires the ownership epoch and can never create `.unfinished`
+  (unlike builds and the `untrack`/`rm` mutators). Every malformed form fails
+  before any mutation: tracked.json unchanged, no content file, no `.unfinished`.
+- `.unfinished` + `build --repair` is the recovery path ONLY for a build that
+  mutated generated state and then failed (reproduced: force-rebuild where one
+  page succeeds and another fails). Ordinary builds refuse until repair.
+- The narrated incident cannot be reproduced from any plausible `track`
+  command. The marker almost certainly came from a subsequent build failure and
+  was misattributed to `track`; "repairing the tracking entry" was likely an
+  unnecessary manual edit. Classification F (cannot be reproduced; narration
+  unsupported). No Nift fix is required for the reported incident.
+- Minor observation (not the incident): `track` writes the content file before
+  `save_tracking` commits, so a save failure (e.g. unwritable `.nift` dir)
+  leaves an orphaned untracked content file. Candidate small improvement under
+  review (persist tracking before, or atomically with, content creation); not
+  applied in this checkpoint.
+
+`contract/track_smoke.sh` freezes the invariants: malformed/invalid track
+invocations fail with zero mutation and no `.unfinished`; the single-name
+grammar (`track a b` = name a, title b); re-track of a tracked page is a clean
+error; and `.unfinished` + `build --repair` is required only after a
+mutated-then-failed build.
