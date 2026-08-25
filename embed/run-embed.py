@@ -37,6 +37,7 @@ ADAPTERS = {
     "cpp": HERE / "adapters" / "cpp-embed",
     "rust": HERE / "adapters" / "rust-embed",
     "c-abi": HERE / "adapters" / "c-abi",
+    "go": HERE / "adapters" / "go-embed",
 }
 CASES_DIR = HERE / "cases"
 

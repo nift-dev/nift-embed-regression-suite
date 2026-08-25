@@ -717,3 +717,11 @@ Rust pagination-template host errors are now preserved (NotFound keeps the
 canonical diagnostic, host Error keeps its own message), matching C++. The
 final semantic host-read audit found no remaining Error suppression in either
 implementation.
+
+## CP11 (2026-08-25)
+
+The Go production binding (`nift-embed/bindings/go`) participates in the shared
+implementation-neutral Embed corpus as a fourth adapter (`embed/adapters/go-embed`):
+the frozen 29 cases now require C++ API == expectation, nift-rs == expectation,
+C ABI == expectation AND Go == expectation, with the negative anti-agreement
+self-test passing across all four.
