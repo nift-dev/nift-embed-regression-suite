@@ -139,9 +139,13 @@ RUST_HARNESS=/path/to/nift-rs/target/debug/examples/engine_harness \
 ./embed/run-embed.py --self-test   # negative checks
 ```
 
-Adapters: `embed/adapters/cpp-embed`, `embed/adapters/rust-embed` — the shared
-runner knows only these adapters and the neutral protocol; it never invokes an
-implementation harness directly.
+Adapters: `embed/adapters/cpp-embed`, `embed/adapters/rust-embed`, and
+`embed/adapters/c-abi` (the C ABI, consumed through its public C symbols by a
+foreign ctypes consumer, including the loader/env seams via the C callback
+API). The shared runner knows only these adapters and the neutral protocol; it
+never invokes an implementation harness directly. It requires C++ == frozen
+expectation, nift-rs == frozen expectation, AND C ABI == frozen expectation for
+every case.
 
 The initial corpus is **16 general + 10 pagination = 26 cases**, migrated from
 the NR6/NR12 implementation differentials. The standalone NR6/NR12 scripts in

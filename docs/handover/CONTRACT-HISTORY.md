@@ -664,3 +664,24 @@ filesystem mutation), a hostile `~/.nift/config.json` (lolcat keys) ignored,
 and the malformed/unknown-key distinctions. Rust `nr14_project_discovery.rs`
 covers the equivalent project-open semantics with a `NotProject` error kind
 (corpus class `not-a-project`).
+
+### Frozen two-file project-identity rule (2026-08-25)
+
+A Nift project is identified by the presence of BOTH `.nift/config.json` and
+`.nift/tracked.json`. A directory containing only one of those files is not a
+complete Nift project and is classified as `NotProject` ("not a Nift project").
+
+This rule is deliberate, not incidental. Lifecycle verification:
+- `nift init` creates both files in the same project; there is no init phase
+  that leaves config.json present and tracked.json absent.
+- `tracked.json` is written atomically (temp+rename via `filesystem::write_file`,
+  the authoritative-state write); an interrupted write leaves either the old or
+  the new file, never a missing one, so crash/recovery cannot produce a
+  config-only recoverable project.
+- `build --repair` operates on an already-discovered project (both files); a
+  config-only directory is not a project and is not a repair target.
+- The useful consequence is the historical `~/.nift/config.json` global config
+  dir (no tracked.json) can never be mistaken for a project.
+
+Do not change this rule unless a lifecycle change makes a config-present /
+tracked-absent state a legitimate recovery target.

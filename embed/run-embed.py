@@ -36,6 +36,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 ADAPTERS = {
     "cpp": HERE / "adapters" / "cpp-embed",
     "rust": HERE / "adapters" / "rust-embed",
+    "c-abi": HERE / "adapters" / "c-abi",
 }
 CASES_DIR = HERE / "cases"
 
@@ -80,14 +81,10 @@ def run_case(case):
             path.write_text(content)
         request = build_request(root, case["request"])
         expected = case["expected"]
-        cpp = run_adapter(ADAPTERS["cpp"], request)
-        rust = run_adapter(ADAPTERS["rust"], request)
-        checks = {
-            "cpp==expected": cpp == expected,
-            "rust==expected": rust == expected,
-            "cpp==rust": cpp == rust,
-        }
-        return case["name"], checks, cpp, rust, expected
+        results = {name: run_adapter(adapter, request) for name, adapter in ADAPTERS.items()}
+        checks = {f"{name}==expected": results[name] == expected for name in ADAPTERS}
+        checks["all-equal"] = len({json.dumps(r, sort_keys=True) for r in results.values()}) == 1
+        return case["name"], checks, results, expected
     finally:
         shutil.rmtree(root, ignore_errors=True)
 
@@ -99,7 +96,7 @@ def run_main():
         return 1
     failures = 0
     for case in cases:
-        name, checks, cpp, rust, expected = run_case(case)
+        name, checks, results, expected = run_case(case)
         if all(checks.values()):
             print("PASS", name)
         else:
@@ -108,9 +105,9 @@ def run_main():
             for key, ok in checks.items():
                 if not ok:
                     print("   ", key, "false")
-                    print("      expected:", json.dumps(expected, sort_keys=True)[:220])
-                    print("      cpp     :", json.dumps(cpp, sort_keys=True)[:220])
-                    print("      rust    :", json.dumps(rust, sort_keys=True)[:220])
+            print("      expected:", json.dumps(expected, sort_keys=True)[:220])
+            for adapter_name, result in results.items():
+                print(f"      {adapter_name:5}:", json.dumps(result, sort_keys=True)[:220])
     print()
     print(f"Embed contract: {len(cases) - failures} passed, {failures} failed")
     return 1 if failures else 0
@@ -125,38 +122,38 @@ def run_self_test():
         return 1
     target = cases[0]
 
-    # 1. A perturbed frozen expectation must fail (C++ and Rust both wrong
-    #    against it even though they agree with each other).
+    # 1. A perturbed frozen expectation must fail (all adapters wrong against
+    #    it even though they agree with each other).
     perturbed = copy.deepcopy(target)
     if perturbed["expected"].get("ok"):
         perturbed["expected"]["output"] = "PERTURBED-EXPECTATION"
     else:
         perturbed["expected"]["error"] = "PERTURBED-EXPECTATION"
-    _, checks, cpp, rust, _ = run_case(perturbed)
-    if cpp == rust:
-        print("  self-test: both adapters agree after perturbation (expected)")
+    _, checks, results, _ = run_case(perturbed)
+    if results["cpp"] == results["rust"] == results["c-abi"]:
+        print("  self-test: all adapters agree after perturbation (expected)")
     else:
         print("  self-test: adapters disagree after perturbation (unexpected)", file=sys.stderr)
         return 1
-    if not checks["cpp==expected"] and not checks["rust==expected"]:
-        print("  self-test: perturbed expectation correctly FAILS both adapters")
+    if all(not checks[f"{name}==expected"] for name in ADAPTERS):
+        print("  self-test: perturbed expectation correctly FAILS all adapters")
     else:
         print("  self-test: perturbed expectation did not fail (broken)", file=sys.stderr)
         return 1
 
-    # 2. Agreement alone must never pass: force both adapters onto the same
+    # 2. Agreement alone must never pass: force all adapters onto the same
     #    WRONG result (a different rendered output) while the frozen
-    #    expectation is the original one. cpp==rust holds, but both must FAIL
-    #    vs expected.
+    #    expectation is the original one. All adapters agree, but each must
+    #    FAIL vs expected.
     composed = next(c for c in cases if c["name"] == "composed-text")
     broken = copy.deepcopy(composed)
     broken["request"] = dict(broken["request"])
     broken["request"]["page"] = "<h2>DIFFERENT</h2>"
-    _, checks, cpp, rust, _ = run_case(broken)
-    if cpp != rust:
+    _, checks, results, _ = run_case(broken)
+    if len({json.dumps(r, sort_keys=True) for r in results.values()}) != 1:
         print("  self-test: broken request gave different results (unexpected)", file=sys.stderr)
         return 1
-    if not checks["cpp==expected"] and not checks["rust==expected"]:
+    if all(not checks[f"{name}==expected"] for name in ADAPTERS):
         print("  self-test: agreement-only result correctly FAILS against expectation")
     else:
         print("  self-test: agreement-only result passed (broken)", file=sys.stderr)

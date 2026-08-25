@@ -1,0 +1,320 @@
+#!/usr/bin/env python3
+"""Nift Embed C ABI adapter (capability layer 2).
+
+Consumes libnift_c.so through its PUBLIC C symbols only (no C++ linkage):
+JSON request on stdin -> JSON result on stdout, implementing the same neutral
+protocol as adapters/cpp-embed and adapters/rust-embed. The loader and
+environment seams are exercised through the C callback API, proving the
+callback boundary works from a foreign consumer.
+
+Override the library path with NIFT_C_ABI.
+"""
+import ctypes
+import json
+import os
+import sys
+
+LIB = os.environ.get(
+    "NIFT_C_ABI", "/home/nick/Repositories/nift/nift-embed/libnift_c.so"
+)
+lib = ctypes.CDLL(LIB)
+
+NIFT_OK = 0
+NIFT_ERROR_INVALID_ARGUMENT = 1
+NIFT_ERROR_PROJECT = 2
+NIFT_ERROR_NOT_FOUND = 3
+NIFT_ERROR_CALLBACK = 4
+
+NIFT_SOURCE_TEXT = 0
+NIFT_SOURCE_PATH = 1
+
+
+class NiftString(ctypes.Structure):
+    _fields_ = [("data", ctypes.c_char_p), ("length", ctypes.c_size_t)]
+
+
+class NiftSource(ctypes.Structure):
+    _fields_ = [
+        ("kind", ctypes.c_int),
+        ("data", ctypes.c_char_p),
+        ("length", ctypes.c_size_t),
+        ("logical_name", ctypes.c_char_p),
+        ("logical_name_length", ctypes.c_size_t),
+    ]
+
+
+NiftStringPtr = ctypes.POINTER(NiftString)
+LoaderCb = ctypes.CFUNCTYPE(
+    ctypes.c_int, ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t, NiftStringPtr
+)
+EnvCb = ctypes.CFUNCTYPE(
+    ctypes.c_int, ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t, NiftStringPtr
+)
+
+lib.nift_engine_new.restype = ctypes.c_void_p
+lib.nift_engine_open.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
+lib.nift_engine_open.restype = ctypes.c_void_p
+lib.nift_engine_free.argtypes = [ctypes.c_void_p]
+lib.nift_engine_set_root.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t]
+lib.nift_engine_set_root.restype = ctypes.c_int
+lib.nift_engine_set_string.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t
+]
+lib.nift_engine_set_string.restype = ctypes.c_int
+lib.nift_engine_set_json.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t
+]
+lib.nift_engine_set_json.restype = ctypes.c_int
+lib.nift_engine_set_loader.argtypes = [ctypes.c_void_p, LoaderCb, ctypes.c_void_p]
+lib.nift_engine_set_loader.restype = ctypes.c_int
+lib.nift_engine_set_environment_provider.argtypes = [ctypes.c_void_p, EnvCb, ctypes.c_void_p]
+lib.nift_engine_set_environment_provider.restype = ctypes.c_int
+
+lib.nift_context_new.restype = ctypes.c_void_p
+lib.nift_context_free.argtypes = [ctypes.c_void_p]
+lib.nift_context_set_page_name.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t]
+lib.nift_context_set_page_name.restype = ctypes.c_int
+lib.nift_context_set_current_output.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t]
+lib.nift_context_set_current_output.restype = ctypes.c_int
+lib.nift_context_set_string.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t
+]
+lib.nift_context_set_string.restype = ctypes.c_int
+lib.nift_context_set_json.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t
+]
+lib.nift_context_set_json.restype = ctypes.c_int
+
+lib.nift_engine_render_page.argtypes = [
+    ctypes.c_void_p, ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t,
+    ctypes.POINTER(ctypes.c_void_p),
+]
+lib.nift_engine_render_page.restype = ctypes.c_int
+lib.nift_engine_render.argtypes = [
+    ctypes.c_void_p, ctypes.POINTER(NiftSource), ctypes.POINTER(NiftSource),
+    ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p),
+]
+lib.nift_engine_render.restype = ctypes.c_int
+lib.nift_engine_render_partial.argtypes = [
+    ctypes.c_void_p, ctypes.POINTER(NiftSource), ctypes.c_void_p,
+    ctypes.POINTER(ctypes.c_void_p),
+]
+lib.nift_engine_render_partial.restype = ctypes.c_int
+
+lib.nift_render_result_free.argtypes = [ctypes.c_void_p]
+lib.nift_render_result_ok.argtypes = [ctypes.c_void_p]
+lib.nift_render_result_ok.restype = ctypes.c_int
+lib.nift_render_result_output.argtypes = [ctypes.c_void_p, NiftStringPtr]
+lib.nift_render_result_output.restype = ctypes.c_int
+lib.nift_render_result_error_message.argtypes = [ctypes.c_void_p, NiftStringPtr]
+lib.nift_render_result_error_message.restype = ctypes.c_int
+lib.nift_render_result_pagination_count.argtypes = [ctypes.c_void_p]
+lib.nift_render_result_pagination_count.restype = ctypes.c_size_t
+lib.nift_render_result_pagination_get.argtypes = [
+    ctypes.c_void_p, ctypes.c_size_t, ctypes.POINTER(ctypes.c_uint), NiftStringPtr
+]
+lib.nift_render_result_pagination_get.restype = ctypes.c_int
+lib.nift_render_result_dependency_count.argtypes = [ctypes.c_void_p]
+lib.nift_render_result_dependency_count.restype = ctypes.c_size_t
+lib.nift_render_result_dependency_get.argtypes = [ctypes.c_void_p, ctypes.c_size_t, NiftStringPtr]
+lib.nift_render_result_dependency_get.restype = ctypes.c_int
+lib.nift_render_result_requirement_count.argtypes = [ctypes.c_void_p]
+lib.nift_render_result_requirement_count.restype = ctypes.c_size_t
+lib.nift_render_result_requirement_get.argtypes = [ctypes.c_void_p, ctypes.c_size_t, NiftStringPtr]
+lib.nift_render_result_requirement_get.restype = ctypes.c_int
+
+
+def read_string(ptr):
+    text = ctypes.string_at(ptr.data, ptr.length)
+    return text.decode("utf-8")
+
+
+def read_string_out(fn, handle):
+    out = NiftString()
+    rc = fn(handle, ctypes.byref(out))
+    if rc != NIFT_OK:
+        raise RuntimeError(f"result accessor failed rc={rc}")
+    return read_string(out)
+
+
+def make_source(data, length, kind):
+    return NiftSource(kind=kind, data=data, length=length,
+                      logical_name=None, logical_name_length=0)
+
+
+def main():
+    req = json.load(sys.stdin)
+    root = req["root"].encode("utf-8")
+    mode = req.get("mode", "composed")
+    seam = req.get("seam", "-")
+
+    if mode == "page":
+        engine = lib.nift_engine_open(root, len(root))
+    else:
+        engine = lib.nift_engine_new()
+        lib.nift_engine_set_root(engine, root, len(root))
+    context = lib.nift_context_new()
+
+    keepalive = []
+    loader_keys = []
+
+    def set_binding(api, name, value):
+        nb = name.encode("utf-8")
+        if value.startswith("json:"):
+            payload = value[5:].encode("utf-8")
+            return api(engine, nb, len(nb), payload, len(payload))
+        vb = value.encode("utf-8")
+        return api(engine, nb, len(nb), vb, len(vb))
+
+    # bindings
+    for name, value in req.get("bindings", {}).items():
+        rc = set_binding(lib.nift_engine_set_json if value.startswith("json:") else lib.nift_engine_set_string, name, value)
+        if rc != NIFT_OK:
+            emit_error(f"binding rejected: {name}")
+            cleanup(engine, context)
+            return 1
+
+    page_name = req.get("page_name")
+    if page_name:
+        nb = page_name.encode("utf-8")
+        lib.nift_context_set_page_name(context, nb, len(nb))
+    current_output = req.get("current_output")
+    if current_output:
+        cb = current_output.encode("utf-8")
+        lib.nift_context_set_current_output(context, cb, len(cb))
+
+    if seam == "loader":
+        @LoaderCb
+        def loader(user_data, path, path_len, out):
+            key = ctypes.string_at(path, path_len).decode("utf-8")
+            loader_keys.append(key)
+            content = None
+            if key.endswith("/templates/template.html"):
+                content = "<main>@content</main>\n"
+            elif key.endswith("/content/blog.html"):
+                content = "<p>LOADER-CONTENT</p>\n"
+            elif key.endswith("/content/post.html"):
+                content = '@input("part.html")\n'
+            elif key.endswith("/content/part.html"):
+                content = "<p>LOADER-PART</p>\n"
+            if content is None:
+                return NIFT_ERROR_NOT_FOUND
+            buf = content.encode("utf-8")
+            keepalive.append(buf)
+            out.contents.data = buf
+            out.contents.length = len(buf)
+            return NIFT_OK
+        lib.nift_engine_set_loader(engine, loader, None)
+
+    if seam == "env":
+        @EnvCb
+        def env(user_data, name, name_len, out):
+            key = ctypes.string_at(name, name_len).decode("utf-8")
+            value = {"NIFT_ENV_A": "alpha", "NIFT_ENV_B": "beta"}.get(key)
+            if value is None:
+                return NIFT_ERROR_NOT_FOUND
+            buf = value.encode("utf-8")
+            keepalive.append(buf)
+            out.contents.data = buf
+            out.contents.length = len(buf)
+            return NIFT_OK
+        lib.nift_engine_set_environment_provider(engine, env, None)
+
+    result = ctypes.c_void_p()
+    rc = NIFT_OK
+    if mode == "page":
+        nb = page_name.encode("utf-8")
+        rc = lib.nift_engine_render_page(engine, context, nb, len(nb), ctypes.byref(result))
+    elif mode == "partial":
+        text = req.get("page") or ""
+        src = make_source(text.encode("utf-8"), len(text), NIFT_SOURCE_TEXT)
+        rc = lib.nift_engine_render_partial(engine, ctypes.byref(src), context, ctypes.byref(result))
+    else:
+        page_path = req.get("page_path")
+        template_path = req.get("template_path")
+        if page_path:
+            pb = page_path.encode("utf-8")
+            page_src = make_source(pb, len(pb), NIFT_SOURCE_PATH)
+        else:
+            text = req.get("page") or ""
+            page_src = make_source(text.encode("utf-8"), len(text), NIFT_SOURCE_TEXT)
+        if template_path:
+            tb = template_path.encode("utf-8")
+            tpl_src = make_source(tb, len(tb), NIFT_SOURCE_PATH)
+        else:
+            text = req.get("template") or ""
+            tpl_src = make_source(text.encode("utf-8"), len(text), NIFT_SOURCE_TEXT)
+        rc = lib.nift_engine_render(engine, ctypes.byref(page_src), ctypes.byref(tpl_src), context, ctypes.byref(result))
+
+    if rc != NIFT_OK:
+        emit_error("call failed")
+        cleanup(engine, context)
+        return 1
+
+    handle = result.value
+    if not lib.nift_render_result_ok(handle):
+        message = read_string_out(lib.nift_render_result_error_message, handle)
+        emit({"ok": False, "error": message})
+        lib.nift_render_result_free(handle)
+        cleanup(engine, context)
+        return 0
+
+    output = read_string_out(lib.nift_render_result_output, handle)
+    pagination = []
+    count = lib.nift_render_result_pagination_count(handle)
+    for index in range(count):
+        page_no = ctypes.c_uint()
+        page_out = NiftString()
+        rc = lib.nift_render_result_pagination_get(handle, index, ctypes.byref(page_no), ctypes.byref(page_out))
+        if rc != NIFT_OK:
+            break
+        pagination.append({"page": int(page_no.value), "output": read_string(page_out)})
+    dep_count = lib.nift_render_result_dependency_count(handle)
+    dependencies = []
+    for index in range(dep_count):
+        out = NiftString()
+        lib.nift_render_result_dependency_get(handle, index, ctypes.byref(out))
+        dependencies.append(read_string(out))
+    req_count = lib.nift_render_result_requirement_count(handle)
+    requirements = []
+    for index in range(req_count):
+        out = NiftString()
+        lib.nift_render_result_requirement_get(handle, index, ctypes.byref(out))
+        requirements.append(read_string(out))
+
+    result_doc = {
+        "ok": True,
+        "output": output,
+        "dependencies": dependencies,
+        "requirements": requirements,
+        "pagination": pagination,
+    }
+    if seam == "loader":
+        prefix = root.decode("utf-8").rstrip("/\\") + "/"
+        relative = {k[len(prefix):] if k.startswith(prefix) else k for k in loader_keys}
+        result_doc["loaderKeys"] = sorted(relative)
+    json.dump(result_doc, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    lib.nift_render_result_free(handle)
+    cleanup(engine, context)
+    return 0
+
+
+def emit(doc):
+    json.dump(doc, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+
+
+def emit_error(message):
+    emit({"ok": False, "error": message})
+
+
+def cleanup(engine, context):
+    if context:
+        lib.nift_context_free(context)
+    if engine:
+        lib.nift_engine_free(engine)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
