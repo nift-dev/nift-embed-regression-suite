@@ -147,7 +147,7 @@ never invokes an implementation harness directly. It requires C++ == frozen
 expectation, nift-rs == frozen expectation, AND C ABI == frozen expectation for
 every case.
 
-The initial corpus is **16 general + 10 pagination = 26 cases**, migrated from
+The initial corpus is **16 general + 10 pagination = 26 cases** plus three frozen host-error cases, migrated from
 the NR6/NR12 implementation differentials. The standalone NR6/NR12 scripts in
 nift-rs remain as implementation-local gates; new Embed cases should be added
 here, in the shared repository, rather than duplicated per implementation tree.

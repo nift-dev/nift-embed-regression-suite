@@ -698,3 +698,15 @@ semantics; the engine models the contract directly. C++ `tests/host_seam.cpp`,
 Rust `nr15_host_seam.rs` and the C ABI adversarial battery cover standalone
 and paginated host failures, not-found vs present-empty, and deterministic
 concurrent attribution.
+
+## Pagination separator + host-error message preservation (2026-08-25, CP10.3)
+
+`HostResult::Error` is never "optional absence": the pagination separator
+distinguishes NotFound (no separator) from Error (render fails with the host
+diagnostic) in both C++ and Rust. The shared corpus gained three frozen
+host-error cases (env standalone, env pagination, loader standalone) with
+`env-error`/`loader-error` adapter seams; total 29/29 across C++ API, nift-rs
+and C ABI. The pagination-separator loader-error path is covered by parser-level
+custom-host tests in both implementations (the project render reads the
+separator from the project snapshot/filesystem, not the engine loader seam, so
+it is not expressible through the neutral corpus).

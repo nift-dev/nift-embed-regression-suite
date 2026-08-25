@@ -1,0 +1,20 @@
+{
+  "name": "host-env-error-pagination",
+  "fixture": {
+    ".nift/config.json": "{\"config\":{\"content-dir\":\"content/\",\"output-dir\":\"public/\",\"default-template\":\"templates/template.html\",\"incremental-mode\":\"modified\"}}",
+    ".nift/tracked.json": "{\"tracked\":[{\"name\":\"blog\",\"title\":\"Blog\",\"template\":\"templates/template.html\",\"paginate\":{\"items-per-page\":1}}]}",
+    "templates/template.html": "<main>$[title]</main>\n@content",
+    "content/blog.html": "@item{one}@item{two}@paginate",
+    "content/blog.paginate.html": "<section>@getenv(NIFT_ENV_A) page $[paginate.current]/$[paginate.total]</section>"
+  },
+  "request": {
+    "page_name": "blog",
+    "mode": "page",
+    "seam": "env-error",
+    "bindings": {}
+  },
+  "expected": {
+    "ok": false,
+    "error": "getenv: host callback failed"
+  }
+}

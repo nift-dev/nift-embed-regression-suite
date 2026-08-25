@@ -1,0 +1,20 @@
+{
+  "name": "host-loader-error",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "page_path": "content/blog.html",
+    "template": "<main>@content</main>",
+    "mode": "composed",
+    "seam": "loader-error",
+    "bindings": {}
+  },
+  "expected": {
+    "ok": false,
+    "error": "host callback failed"
+  }
+}
