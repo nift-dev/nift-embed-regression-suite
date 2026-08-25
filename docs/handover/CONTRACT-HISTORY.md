@@ -639,3 +639,28 @@ Semantic adjustments recorded during the migration:
   many-dir. No-op builds are unchanged (no writes => no scans). The recovery
   contract is preserved; the recovery-epoch guard still bounds scans to one
   per distinct parent per epoch.
+## No-global-config / outside-project contract (2026-08-25, pre-CP10)
+
+Removed the historical global-config fallback. There is no global Nift
+configuration: a directory is a Nift project root only where the relevant
+project state exists (`.nift/config.json` AND `.nift/tracked.json`). The CLI's
+upward project walk previously accepted any directory with `.nift/config.json`,
+so the historical `~/.nift` global config dir (config.json with old keys such
+as `lolcat-default`, no tracked.json) was mistaken for a project root whenever
+a command ran under the home directory, leaking an "unknown config key
+'lolcat-default'" diagnostic. Both the C++ CLI and the C++/Rust embed
+project-open paths now gate on the two state files BEFORE any parsing:
+
+```text
+project absent                 -> "not a Nift project" (NotProject)
+project config malformed       -> "invalid project config (...)"
+project config unknown key     -> "unknown config key '...'"
+project tracking malformed     -> "invalid tracked.json (...)"
+```
+
+`contract/not_a_project_smoke.sh` covers build/build --all/--repair/status/
+info --all/track/rm outside a project (non-zero + canonical diagnostic + zero
+filesystem mutation), a hostile `~/.nift/config.json` (lolcat keys) ignored,
+and the malformed/unknown-key distinctions. Rust `nr14_project_discovery.rs`
+covers the equivalent project-open semantics with a `NotProject` error kind
+(corpus class `not-a-project`).

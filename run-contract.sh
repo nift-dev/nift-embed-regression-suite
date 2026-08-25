@@ -66,7 +66,8 @@ for test in \
   filesystem_recovery_smoke.sh \
   minify_integration_smoke.sh \
   template_optional_smoke.sh \
-  init_targets_smoke.sh
+  init_targets_smoke.sh \
+  not_a_project_smoke.sh
 do
   run_module "contract/$test" env NIFT_BIN="$NIFT_BIN" bash "$ROOT/contract/$test"
 done
