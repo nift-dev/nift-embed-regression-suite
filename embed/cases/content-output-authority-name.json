@@ -1,0 +1,20 @@
+{
+  "name": "content-output-authority-name",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "page": "cp=$[content-path] op=$[output-path]@content",
+    "page_name": "blog",
+    "current_output": "public/about.html",
+    "page_path": "content/blog.html",
+    "mode": "composed"
+  },
+  "expected": {
+    "ok": false,
+    "error": "templated tracked items must execute exactly one @content; add @content through the template/input graph or omit the tracked template field"
+  }
+}

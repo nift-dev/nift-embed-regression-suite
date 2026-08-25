@@ -1,0 +1,18 @@
+{
+  "name": "pagination-unknown-page",
+  "fixture": {
+    ".nift/config.json": "{\"config\":{\"content-dir\":\"content/\",\"output-dir\":\"public/\",\"default-template\":\"templates/template.html\",\"incremental-mode\":\"modified\"}}",
+    ".nift/tracked.json": "{\"tracked\":[{\"name\":\"blog\",\"title\":\"Blog\",\"template\":\"templates/template.html\"}]}",
+    "content/blog.html": "<p>static</p>",
+    "content/blog.paginate.html": "<section>page $[paginate.current]/$[paginate.total]:[$[paginate.items]]</section>",
+    "templates/template.html": "<main>$[title]</main>\n@content"
+  },
+  "request": {
+    "page_name": "nope",
+    "mode": "page"
+  },
+  "expected": {
+    "ok": false,
+    "error": "unknown page name 'nope'"
+  }
+}

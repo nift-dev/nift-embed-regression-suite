@@ -1,0 +1,19 @@
+{
+  "name": "pagination-deps-pathto-input",
+  "fixture": {
+    ".nift/config.json": "{\"config\":{\"content-dir\":\"content/\",\"output-dir\":\"public/\",\"default-template\":\"templates/template.html\",\"incremental-mode\":\"modified\"}}",
+    ".nift/tracked.json": "{\"tracked\":[{\"name\":\"blog\",\"title\":\"Blog\",\"template\":\"templates/template.html\",\"paginate\":{\"items-per-page\":1}}]}",
+    "content/blog.html": "@item{one}@item{two}@paginate",
+    "content/blog.paginate.html": "<section>@dep('app.js')@pathto('asset.js')@input('part.html')</section>",
+    "templates/template.html": "<main>$[title]</main>\n@content",
+    "content/part.html": "<p>PART</p>"
+  },
+  "request": {
+    "page_name": "blog",
+    "mode": "page"
+  },
+  "expected": {
+    "ok": false,
+    "error": "failed as dependency does not exist: app.js"
+  }
+}

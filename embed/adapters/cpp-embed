@@ -1,9 +1,69 @@
-#!/usr/bin/env bash
-# C++ Nift Embed adapter for the neutral Embed contract protocol.
-#
-# The adapter is the frozen standalone C++ Engine harness (nift-embed
-# .build/engine-harness). It accepts the neutral request and emits the neutral
-# JSON result; the case corpus in embed/run-embed.sh never depends on the C++
-# API. Override with CPP_HARNESS.
-set -euo pipefail
-exec "${CPP_HARNESS:-/home/nick/Repositories/nift/nift-embed/.build/engine-harness}" "$@"
+#!/usr/bin/env python3
+"""C++ Nift Embed adapter (capability layer 2).
+
+Neutral protocol: one JSON request document on stdin -> one JSON result on
+stdout. The request is implementation-neutral; only this adapter knows how to
+invoke the C++ Embed harness. Override the harness path with CPP_HARNESS.
+
+Request:
+    {"root": "<case root>",
+     "page": "<text>"|null, "template": "<text>"|null,
+     "page_name": "<name>"|null, "current_output": "<path>"|null,
+     "page_path": "<path>"|null, "template_path": "<path>"|null,
+     "mode": "composed"|"partial"|"page", "seam": "-"|"loader"|"env",
+     "bindings": {"name": "value", ...}}   // "json:<text>" value binds JSON
+
+Result:
+    {"ok":true,"output":"...","dependencies":[...],"requirements":[...],
+     "pagination":[{"page":N,"output":"..."},...],"loaderKeys":[...]}
+    {"ok":false,"error":"..."}
+"""
+import json
+import os
+import subprocess
+import sys
+
+req = json.load(sys.stdin)
+harness = os.environ.get(
+    "CPP_HARNESS", "/home/nick/Repositories/nift/nift-embed/.build/engine-harness"
+)
+
+
+def dash(value):
+    return "-" if value in (None, "") else value
+
+
+args = [
+    harness,
+    req["root"],
+    dash(req.get("page")),
+    dash(req.get("template")),
+    dash(req.get("page_name")),
+    dash(req.get("current_output")),
+    dash(req.get("page_path")),
+    dash(req.get("template_path")),
+    req.get("mode", "composed"),
+    req.get("seam", "-"),
+]
+bindings = req.get("bindings", {})
+stdin_text = "".join(f"{name}={value}\n" for name, value in bindings.items())
+
+proc = subprocess.run(args, input=stdin_text, capture_output=True, text=True)
+if not proc.stdout:
+    json.dump({"ok": False, "error": proc.stderr.strip()}, sys.stdout)
+    sys.stdout.write("\n")
+    sys.exit(0)
+try:
+    result = json.loads(proc.stdout)
+except json.JSONDecodeError:
+    sys.stdout.write(proc.stdout)
+    sys.exit(0)
+# Neutralize loader keys to root-relative spellings so the result document is
+# independent of where the case fixture was materialized.
+root = req["root"]
+keys = result.get("loaderKeys")
+if isinstance(keys, list):
+    prefix = root.rstrip("/\\") + "/"
+    result["loaderKeys"] = [k[len(prefix):] if k.startswith(prefix) else k for k in keys]
+json.dump(result, sys.stdout, ensure_ascii=False)
+sys.stdout.write("\n")

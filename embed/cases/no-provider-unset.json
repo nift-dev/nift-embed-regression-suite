@@ -1,0 +1,22 @@
+{
+  "name": "no-provider-unset",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "page": "@getenv(NIFT_DIFF_UNSET_VAR)",
+    "template": "<main>@content</main>",
+    "mode": "composed",
+    "seam": "-"
+  },
+  "expected": {
+    "ok": true,
+    "output": "<main></main>",
+    "dependencies": [],
+    "requirements": [],
+    "pagination": []
+  }
+}

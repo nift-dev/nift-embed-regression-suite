@@ -1,0 +1,50 @@
+{
+  "name": "pagination-seven-pages",
+  "fixture": {
+    ".nift/config.json": "{\"config\":{\"content-dir\":\"content/\",\"output-dir\":\"public/\",\"default-template\":\"templates/template.html\",\"incremental-mode\":\"modified\"}}",
+    ".nift/tracked.json": "{\"tracked\":[{\"name\":\"blog\",\"title\":\"Blog\",\"template\":\"templates/template.html\",\"paginate\":{\"items-per-page\":1}}]}",
+    "content/blog.html": "@item{n1}@item{n2}@item{n3}@item{n4}@item{n5}@item{n6}@item{n7}@paginate",
+    "content/blog.paginate.html": "<section>page $[paginate.current]/$[paginate.total]:[$[paginate.items]]</section>",
+    "templates/template.html": "<main>$[title]</main>\n@content"
+  },
+  "request": {
+    "page_name": "blog",
+    "mode": "page"
+  },
+  "expected": {
+    "ok": true,
+    "output": "<main>Blog</main>\n<section>page 1/7:[n1]</section>",
+    "dependencies": [
+      "content/blog.html",
+      "content/blog.paginate.html",
+      "templates/template.html"
+    ],
+    "requirements": [],
+    "pagination": [
+      {
+        "page": 2,
+        "output": "<main>Blog</main>\n<section>page 2/7:[n2]</section>"
+      },
+      {
+        "page": 3,
+        "output": "<main>Blog</main>\n<section>page 3/7:[n3]</section>"
+      },
+      {
+        "page": 4,
+        "output": "<main>Blog</main>\n<section>page 4/7:[n4]</section>"
+      },
+      {
+        "page": 5,
+        "output": "<main>Blog</main>\n<section>page 5/7:[n5]</section>"
+      },
+      {
+        "page": 6,
+        "output": "<main>Blog</main>\n<section>page 6/7:[n6]</section>"
+      },
+      {
+        "page": 7,
+        "output": "<main>Blog</main>\n<section>page 7/7:[n7]</section>"
+      }
+    ]
+  }
+}

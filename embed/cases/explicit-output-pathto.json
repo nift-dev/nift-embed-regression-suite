@@ -1,0 +1,19 @@
+{
+  "name": "explicit-output-pathto",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "page": "@pathto(\"public/app.js\")@content",
+    "page_name": "about",
+    "current_output": "public/about.html",
+    "mode": "composed"
+  },
+  "expected": {
+    "ok": false,
+    "error": "templated tracked items must execute exactly one @content; add @content through the template/input graph or omit the tracked template field"
+  }
+}

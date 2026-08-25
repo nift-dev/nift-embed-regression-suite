@@ -1,0 +1,29 @@
+{
+  "name": "loader-input",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "template": "<main>@content</main>",
+    "page_path": "content/post.html",
+    "mode": "composed",
+    "seam": "loader"
+  },
+  "expected": {
+    "ok": true,
+    "output": "<main><p>LOADER-PART</p></main>",
+    "dependencies": [
+      "content/part.html",
+      "content/post.html"
+    ],
+    "requirements": [],
+    "pagination": [],
+    "loaderKeys": [
+      "content/part.html",
+      "content/post.html"
+    ]
+  }
+}

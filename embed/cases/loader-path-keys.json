@@ -1,0 +1,29 @@
+{
+  "name": "loader-path-keys",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "page_path": "content/blog.html",
+    "template_path": "templates/template.html",
+    "mode": "composed",
+    "seam": "loader"
+  },
+  "expected": {
+    "ok": true,
+    "output": "<main><p>LOADER-CONTENT</p></main>\n",
+    "dependencies": [
+      "content/blog.html",
+      "templates/template.html"
+    ],
+    "requirements": [],
+    "pagination": [],
+    "loaderKeys": [
+      "content/blog.html",
+      "templates/template.html"
+    ]
+  }
+}

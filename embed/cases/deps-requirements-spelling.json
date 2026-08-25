@@ -1,0 +1,26 @@
+{
+  "name": "deps-requirements-spelling",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "page": "@content",
+    "page_name": "blog",
+    "page_path": "content/blog.html",
+    "template_path": "templates/template.html",
+    "mode": "composed"
+  },
+  "expected": {
+    "ok": true,
+    "output": "<main><p>PATH-CONTENT</p></main>\n",
+    "dependencies": [
+      "content/blog.html",
+      "templates/template.html"
+    ],
+    "requirements": [],
+    "pagination": []
+  }
+}

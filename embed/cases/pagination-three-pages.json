@@ -1,0 +1,34 @@
+{
+  "name": "pagination-three-pages",
+  "fixture": {
+    ".nift/config.json": "{\"config\":{\"content-dir\":\"content/\",\"output-dir\":\"public/\",\"default-template\":\"templates/template.html\",\"incremental-mode\":\"modified\"}}",
+    ".nift/tracked.json": "{\"tracked\":[{\"name\":\"blog\",\"title\":\"Blog\",\"template\":\"templates/template.html\",\"paginate\":{\"items-per-page\":1}}]}",
+    "content/blog.html": "@item{one}@item{two}@item{three}@paginate",
+    "content/blog.paginate.html": "<section>page $[paginate.current]/$[paginate.total]:[$[paginate.items]]</section>",
+    "templates/template.html": "<main>$[title]</main>\n@content"
+  },
+  "request": {
+    "page_name": "blog",
+    "mode": "page"
+  },
+  "expected": {
+    "ok": true,
+    "output": "<main>Blog</main>\n<section>page 1/3:[one]</section>",
+    "dependencies": [
+      "content/blog.html",
+      "content/blog.paginate.html",
+      "templates/template.html"
+    ],
+    "requirements": [],
+    "pagination": [
+      {
+        "page": 2,
+        "output": "<main>Blog</main>\n<section>page 2/3:[two]</section>"
+      },
+      {
+        "page": 3,
+        "output": "<main>Blog</main>\n<section>page 3/3:[three]</section>"
+      }
+    ]
+  }
+}

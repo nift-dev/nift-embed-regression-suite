@@ -1,0 +1,20 @@
+{
+  "name": "partial",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "page": "<p>x</p>",
+    "mode": "partial"
+  },
+  "expected": {
+    "ok": true,
+    "output": "<p>x</p>",
+    "dependencies": [],
+    "requirements": [],
+    "pagination": []
+  }
+}
