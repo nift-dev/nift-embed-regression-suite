@@ -36,7 +36,10 @@ args = [
     req.get("seam", "-"),
 ]
 bindings = req.get("bindings", {})
-stdin_text = "".join(f"{name}={value}\n" for name, value in bindings.items())
+context_bindings = req.get("context_bindings", {})
+lines = [f"{name}={value}" for name, value in bindings.items()]
+lines += [f"@ctx {name}={value}" for name, value in context_bindings.items()]
+stdin_text = "".join(f"{line}\n" for line in lines)
 
 proc = subprocess.run(args, input=stdin_text, capture_output=True, text=True)
 if not proc.stdout:

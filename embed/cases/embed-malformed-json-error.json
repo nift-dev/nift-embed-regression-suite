@@ -1,0 +1,21 @@
+{
+  "name": "embed-malformed-json-error",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "content/bad.json": "not json\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "page": "@json(\"content/bad.json\", d)$[d.x]@content",
+    "template": "<main>@content</main>",
+    "mode": "composed",
+    "seam": "-",
+    "bindings": {}
+  },
+  "expected": {
+    "ok": false,
+    "error_prefix": "json: failed to parse content/bad.json ("
+  }
+}

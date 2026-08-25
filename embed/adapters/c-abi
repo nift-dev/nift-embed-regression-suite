@@ -158,21 +158,30 @@ def main():
     keepalive = []
     loader_keys = []
 
-    def set_binding(api, name, value):
+    def set_binding(api, handle, name, value):
         nb = name.encode("utf-8")
         if value.startswith("json:"):
             payload = value[5:].encode("utf-8")
-            return api(engine, nb, len(nb), payload, len(payload))
+            return api(handle, nb, len(nb), payload, len(payload))
         vb = value.encode("utf-8")
-        return api(engine, nb, len(nb), vb, len(vb))
+        return api(handle, nb, len(nb), vb, len(vb))
 
-    # bindings
+    # Engine-default bindings; a binding/setup operation rejected by the
+    # underlying API must surface as a controlled setup failure (CP12.1).
     for name, value in req.get("bindings", {}).items():
-        rc = set_binding(lib.nift_engine_set_json if value.startswith("json:") else lib.nift_engine_set_string, name, value)
+        rc = set_binding(lib.nift_engine_set_json if value.startswith("json:") else lib.nift_engine_set_string, engine, name, value)
         if rc != NIFT_OK:
-            emit_error(f"binding rejected: {name}")
+            emit_error(f"invalid binding name: {name}")
             cleanup(engine, context)
-            return 1
+            return 0
+
+    # Per-render Context bindings (context-over-engine precedence, CP12.1).
+    for name, value in req.get("context_bindings", {}).items():
+        rc = set_binding(lib.nift_context_set_json if value.startswith("json:") else lib.nift_context_set_string, context, name, value)
+        if rc != NIFT_OK:
+            emit_error(f"invalid binding name: {name}")
+            cleanup(engine, context)
+            return 0
 
     page_name = req.get("page_name")
     if page_name:

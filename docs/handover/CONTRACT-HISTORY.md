@@ -816,3 +816,26 @@ remain exact per CP11.1). Recommended corpus mechanism: an error-family
 Not added yet — awaiting review. (Gap noted: context-over-engine binding
 precedence is genuine Embed semantics but needs a neutral-protocol extension;
 deferred.)
+
+## CP12.1 — contract strengthenings (2026-08-26, per CP12 review)
+
+- Expectation mechanism: corpus gained a deliberately narrow `error_prefix`
+  mode (exact `error` stays the default; specifying both is an invalid case).
+  Used ONLY for implementation-detail diagnostics (JSON parser wording);
+  host-error diagnostics remain exact per CP11.1. Added
+  `embed-malformed-json-error` (malformed @json content -> controlled
+  "json: failed to parse content/bad.json (...)" failure; exact wording is NOT
+  contract; the frozen prefix IS).
+- Neutral protocol: requests may now carry `context_bindings` (per-render
+  Context) alongside `bindings` (Engine defaults). All four adapters/harnesses
+  updated. Added `embed-context-over-engine`: same name on both -> Context wins
+  ("context"). Frozen for C# to implement.
+- Binding-setup failures: rule frozen — a binding/setup operation rejected by
+  the underlying API must be surfaced as a controlled setup failure
+  ({"ok":false,"error":"invalid binding name: <name>"}), never silently
+  ignored. All four adapters audited and fixed (c-abi previously returned a
+  differing message; harnesses previously ignored setter failures). Added
+  `embed-invalid-engine-binding` and `embed-invalid-context-binding` (name
+  "9bad" rejected identically by all four APIs -> exact expectation).
+- Corpus now 36 shared cases (was 32); all four adapters agree 36/36 + negative
+  self-test; CLI/build unchanged at 27 modules.

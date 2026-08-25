@@ -44,10 +44,38 @@ CASES_DIR = HERE / "cases"
 REQ_PATH_KEYS = ("current_output", "page_path", "template_path")
 
 
+def matches_expected(expected, actual):
+    """Match an adapter result against a frozen expectation.
+
+    Normal fields must be JSON-equal. The `error` field is exact. The
+    deliberately narrow `error_prefix` mode (implementation-detail diagnostics
+    such as JSON parser wording) requires the actual error to start with the
+    frozen prefix AND contain additional non-empty diagnostic text. A case may
+    specify `error` or `error_prefix`, never both (validated at load time).
+    """
+    if expected.get("error_prefix") is not None:
+        prefix = expected["error_prefix"]
+        error = actual.get("error")
+        if not isinstance(error, str) or not error.startswith(prefix):
+            return False
+        if len(error) <= len(prefix):
+            return False
+        rest = {k: v for k, v in actual.items() if k != "error"}
+        rest_exp = {k: v for k, v in expected.items() if k != "error_prefix"}
+        return rest == rest_exp
+    return actual == expected
+
+
 def load_cases():
     cases = []
     for path in sorted(CASES_DIR.glob("*.json")):
-        cases.append(json.loads(path.read_text()))
+        case = json.loads(path.read_text())
+        expected = case["expected"]
+        if "error" in expected and "error_prefix" in expected:
+            raise SystemExit(
+                f"invalid corpus case {case['name']}: both 'error' and 'error_prefix' specified"
+            )
+        cases.append(case)
     return cases
 
 
@@ -83,8 +111,14 @@ def run_case(case):
         request = build_request(root, case["request"])
         expected = case["expected"]
         results = {name: run_adapter(adapter, request) for name, adapter in ADAPTERS.items()}
-        checks = {f"{name}==expected": results[name] == expected for name in ADAPTERS}
-        checks["all-equal"] = len({json.dumps(r, sort_keys=True) for r in results.values()}) == 1
+        checks = {f"{name}==expected": matches_expected(expected, results[name]) for name in ADAPTERS}
+        if "error_prefix" in expected:
+            # Implementation-detail diagnostics (e.g. JSON parser wording) are
+            # not byte-identical across adapters by contract; the invariant is
+            # that every adapter satisfies the frozen expectation family.
+            checks["all-equal"] = all(matches_expected(expected, r) for r in results.values())
+        else:
+            checks["all-equal"] = len({json.dumps(r, sort_keys=True) for r in results.values()}) == 1
         return case["name"], checks, results, expected
     finally:
         shutil.rmtree(root, ignore_errors=True)
