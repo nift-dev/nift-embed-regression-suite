@@ -68,7 +68,8 @@ for test in \
   template_optional_smoke.sh \
   init_targets_smoke.sh \
   not_a_project_smoke.sh \
-  track_smoke.sh
+  track_smoke.sh \
+  config_validation_smoke.sh
 do
   run_module "contract/$test" env NIFT_BIN="$NIFT_BIN" bash "$ROOT/contract/$test"
 done

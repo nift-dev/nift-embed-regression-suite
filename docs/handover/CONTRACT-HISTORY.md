@@ -781,3 +781,38 @@ with a non-empty `out` preserves that `out` as the failed RenderResult
 diagnostic (empty `out` falls back to the generic message). All four adapters
 agree on `host exploded` / `getenv: host exploded` for the three host-error
 cases; corpus total remains 29/29.
+
+## CP12 — contract strengthening (2026-08-25)
+
+Expanded the implementation-neutral corpus and CLI contract layer.
+
+New shared Embed cases (32 total):
+- `embed-deps-dedupe` — repeated @input of the same partial produces ONE
+  deduplicated dependency (rendered content repeats; the dependency set does
+  not).
+- `embed-json-value-types` — JSON int/float/bool bindings render exactly
+  ("1|1.5|true").
+- `embed-missing-input-error` — a missing @input partial is a controlled
+  "@input path does not exist" error, distinct from a host failure.
+
+New CLI contract module (27 total): `contract/config_validation_smoke.sh` —
+malformed config.json -> "invalid project config" (never "not a project");
+unknown config key -> "unknown config key"; malformed tracked.json -> "invalid
+tracked.json"; valid project builds.
+
+Cross-adapter consistency fixes found by the new cases:
+- The Go harness no longer emits loaderKeys on error results (the other three
+  adapters omit them).
+
+Ambiguity STOP (per CP12 instruction, awaiting review): a @json read of a
+MALFORMED file produces a controlled JSON parse error whose diagnostic TEXT
+differs between implementations — C++/Go/C ABI say "expected quoted object key
+at line 1, column 2", Rust (jsonic-rs) says "failed to parse JSON (expected
+'\"' at position 1 (found 'n'))". Recommendation: the Embed contract requires a
+controlled JSON parse error (semantic family), not byte-identical diagnostic
+text (the parser message is an implementation detail; host-error diagnostics
+remain exact per CP11.1). Recommended corpus mechanism: an error-family
+(substring/class) expectation mode for implementation-detail diagnostics.
+Not added yet — awaiting review. (Gap noted: context-over-engine binding
+precedence is genuine Embed semantics but needs a neutral-protocol extension;
+deferred.)

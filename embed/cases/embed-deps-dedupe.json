@@ -1,0 +1,24 @@
+{
+  "name": "embed-deps-dedupe",
+  "fixture": {
+    "content/blog.html": "<p>PATH-CONTENT</p>\n",
+    "content/part.html": "P\n",
+    "templates/template.html": "<main>@content</main>\n",
+    "public/app.js": "x\n"
+  },
+  "request": {
+    "page": "@input(\"content/part.html\")@input(\"content/part.html\")",
+    "template": "<main>@content</main>",
+    "mode": "composed",
+    "seam": "loader",
+    "bindings": {}
+  },
+  "expected": {
+    "ok": true,
+    "output": "<main><p>LOADER-PART</p><p>LOADER-PART</p></main>",
+    "dependencies": ["content/part.html"],
+    "requirements": [],
+    "pagination": [],
+    "loaderKeys": ["content/part.html"]
+  }
+}
