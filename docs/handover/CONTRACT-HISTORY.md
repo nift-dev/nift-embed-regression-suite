@@ -617,3 +617,25 @@ Semantic adjustments recorded during the migration:
   primary page + pages 2..N under canonical N>=2 names with no leading zeros,
   per-page item windows ascending, non-paginated pages emitting only their
   primary output, and single-page pagination emitting no page 2.
+## Capability-layer architecture + direct-write recovery performance (2026-08-25)
+
+- Corrected the terminology: the `contract/` layer is implementation-neutral
+  **for compatible Nift CLI implementations**, not a universal
+  implementation-independent framework. `nift-rs` deliberately does not
+  implement the CLI/build orchestrator and cannot run that layer.
+- Introduced capability layer 2: `embed/` — the shared Nift Embed contract.
+  Neutral adapter protocol (JSON request/result; see `embed/README.md`) with
+  C++ and nift-rs adapters. Migrated the NR6 general corpus (16 cases) and
+  NR12 pagination corpus (10 cases) into `embed/run-embed.sh`; all 26 cases
+  pass byte-identically against both adapters. The standalone NR6/NR12 scripts
+  in nift-rs remain as implementation-local gates, with a migration plan to
+  make the shared corpus canonical.
+- Performance sanity for the restored direct-write stale-temp recovery
+  (nift-embed adc3ac3, 10k interleaved methodology): the initial
+  `directory_iterator` scan added ~13 ms to a flat 10k forced full build and
+  ~8 ms to a 2000-distinct-dir build. Replacing the scan with raw
+  `readdir`/`FindFirstFile` enumeration (allocation-free per entry) reduced
+  this to ~9 ms flat (~+8.8%, at/near the readdir floor) and ~3 ms
+  many-dir. No-op builds are unchanged (no writes => no scans). The recovery
+  contract is preserved; the recovery-epoch guard still bounds scans to one
+  per distinct parent per epoch.

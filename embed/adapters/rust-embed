@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# nift-rs Nift Embed adapter for the neutral Embed contract protocol.
+#
+# The adapter is the nift-rs standalone Engine harness (cargo build --example
+# engine_harness). It accepts the neutral request and emits the neutral JSON
+# result; the case corpus in embed/run-embed.sh never depends on the Rust API.
+# Override with RUST_HARNESS.
+set -euo pipefail
+exec "${RUST_HARNESS:-/home/nick/Repositories/nift/nift-rs/target/debug/examples/engine_harness}" "$@"

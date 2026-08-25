@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# C++ Nift Embed adapter for the neutral Embed contract protocol.
+#
+# The adapter is the frozen standalone C++ Engine harness (nift-embed
+# .build/engine-harness). It accepts the neutral request and emits the neutral
+# JSON result; the case corpus in embed/run-embed.sh never depends on the C++
+# API. Override with CPP_HARNESS.
+set -euo pipefail
+exec "${CPP_HARNESS:-/home/nick/Repositories/nift/nift-embed/.build/engine-harness}" "$@"

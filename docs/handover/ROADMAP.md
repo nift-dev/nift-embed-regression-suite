@@ -4,6 +4,20 @@ This is a living production-gate risk assessment. Revisit it whenever Nift gains
 behavior, a regression exposes a new family, fixtures become flaky, platform
 coverage changes, or production confidence changes.
 
+## Capability layers
+
+The suite is one corpus organized by capability, not one executable interface:
+
+- Layer 1 (`run-contract.sh`, `NIFT_BIN`) — Nift CLI/build contract; requires a
+  complete Nift CLI implementation. `nift-rs` does not participate.
+- Layer 2 (`embed/run-embed.sh`) — Nift Embed contract through neutral adapters;
+  C++ Nift Embed and `nift-rs` both participate.
+
+New Embed behavior belongs in `embed/` (shared cases + adapters), not duplicated
+per implementation tree. The standalone NR6/NR12 differential scripts in nift-rs
+remain implementation-local gates; migrate their cases here as the canonical
+home, then reduce the scripts to thin wrappers over this corpus.
+
 ## Current priorities
 
 1. Reconcile local and standalone focused modules and establish an automated

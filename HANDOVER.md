@@ -1,16 +1,27 @@
 # Nift regression-suite handover
 
-This repository is the canonical implementation-independent behavioral contract
-for the Nift v4 family. The current development executable targets Nift 4.0.7; it
-is not an implementation test directory extracted from the C++ tree.
+This repository is the canonical behavioral contract for the Nift v4 family,
+organized into capability layers rather than one universal executable
+interface. The current development executable targets Nift 4.0.7; it is not an
+implementation test directory extracted from the C++ tree.
 
-## Authority and purpose
+## Capability layers
 
-The runner accepts an arbitrary Nift executable and observes CLI status,
-filesystem state, generated output, project metadata, incrementality, and failure
-behavior. It must not include private Nift headers or depend on C++ class layout.
-A future independent implementation should be able to pass by implementing the
-same observable contract.
+- **Layer 1 — Nift CLI/build contract** (`run-contract.sh`, `NIFT_BIN`): the
+  runner accepts an arbitrary Nift executable and observes CLI status,
+  filesystem state, generated output, project metadata, incrementality, and
+  failure behavior. It must not include private Nift headers or depend on C++
+  class layout. This layer is **implementation-neutral for compatible Nift CLI
+  implementations** — it requires a complete executable implementing the
+  CLI/build orchestrator (`build`/`--all`/`--auto`/`--repair`, `status`,
+  `info`, `.unfinished`, repair, watch, incremental persistence). `nift-rs`
+  deliberately does not implement that orchestrator and does not participate.
+- **Layer 2 — Nift Embed contract** (`embed/run-embed.sh`): shared rendering
+  semantics executed through tiny implementation adapters (C++ Nift Embed and
+  `nift-rs`). The neutral adapter protocol is JSON request/result; only the
+  adapter knows the implementation language/API. The initial corpus (26 cases)
+  was migrated from the NR6/NR12 implementation differentials. See
+  `embed/README.md`.
 
 Current suite behavior and runner files are authoritative. Nift source/tests are
 authoritative for implementation internals. Nift's core handover owns product
@@ -18,11 +29,15 @@ history; this repository owns black-box contract methodology.
 
 ## Layout
 
-- `run-contract.sh`: resolves the candidate executable, creates disposable state,
-  and runs all correctness modules, including config-declared project contracts.
+- `run-contract.sh`: capability layer 1 — resolves the candidate executable,
+  creates disposable state, and runs all CLI/build correctness modules,
+  including config-declared project contracts.
+- `embed/`: capability layer 2 — the shared Nift Embed contract (neutral
+  adapter protocol, C++/Rust adapters, 26 migrated rendering/pagination cases).
 - `legacy/`: accumulated historical and ruthless black-box suite; copied before
   execution because it intentionally mutates its fixture.
-- `contract/`: focused executable-level modules previously mirrored near Nift.
+- `contract/`: focused executable-level CLI/build modules previously mirrored
+  near Nift.
 - `benchmarks/`: optional performance/scaling/RSS guards, intentionally separate
   from correctness.
 - `docs/handover/TESTING.md`: detailed contract-development guidance and history.

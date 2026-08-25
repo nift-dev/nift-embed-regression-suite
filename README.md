@@ -1,10 +1,26 @@
 # Nift v4 Contract Regression Suite
 
-This is the canonical **implementation-independent** regression suite for the
-Nift v4 contract. The current development executable targets Nift 4.0.7.
+This is the canonical regression suite for the Nift v4 contract. It is one
+repository with one contract corpus organized into capability layers, not one
+universal executable interface:
 
-It does **not** compile or include Nift implementation source. Point it at any
-candidate Nift executable:
+- **Capability layer 1 — Nift CLI/build contract** (`run-contract.sh`,
+  `NIFT_BIN`): build grammar, incremental behaviour, `status`/`info`,
+  `.unfinished` ownership, `build --repair`, filesystem persistence/recovery,
+  `watch`, init/deployment, output ownership. This layer is
+  **implementation-neutral for compatible Nift CLI implementations**: it needs
+  a complete Nift executable that implements the CLI/build orchestrator.
+  `nift-rs` deliberately does not implement that orchestrator and does not
+  participate here.
+- **Capability layer 2 — Nift Embed contract** (`embed/run-embed.sh`): shared
+  rendering semantics (templates, `@input`/`@pathto`/`@json`/`@dep`/`@getenv`,
+  bindings, dependencies/requirements, complete pagination) executed through
+  implementation adapters. C++ Nift Embed and `nift-rs` both participate; the
+  case corpus never depends on a specific implementation API. See
+  `embed/README.md`.
+
+Layer 1 does **not** compile or include Nift implementation source. Point it at
+any candidate Nift executable:
 
 ```bash
 NIFT_BIN=/path/to/nift ./run-contract.sh
@@ -43,8 +59,11 @@ were previously kept beside the Nift source tree.
 interpolation in textual `@function(...)` parameters. It was written red before
 implementation and now passes with the other focused modules. Its history
 preserves that test-first checkpoint; the current expected result is 22 green
-modules: the historical/ruthless module plus 21 focused modules, including
-pagination, collection operations and the long-running filesystem-recovery contract.
+modules: the historical/ruthless module plus 23 focused modules, including
+pagination, the complete-pagination (CP8) contract, the unified-CLI grammar
+contract, collection operations and the long-running filesystem-recovery
+contract. The Embed contract runner adds 26 shared cases executed against both
+the C++ Embed and nift-rs adapters.
 
 `contract/filesystem_recovery_smoke.sh` protects the long-running recovery contract:
 a dead-owner transactional temp created after an earlier build-pass scan may remain

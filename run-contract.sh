@@ -40,7 +40,8 @@ chmod -R u+rwX "$LEGACY"
 run_module "historical + ruthless regression contract" \
   bash -c "cd '$LEGACY' && NIFT_BIN='$NIFT_BIN' bash scripts/run-tests.sh"
 
-# Newer contract modules are implementation-independent: each creates temporary
+# Capability layer 1 (Nift CLI/build contract): implementation-neutral for
+# compatible Nift CLI implementations -- each module creates temporary
 # Nift projects and interacts only through the executable + documented project files.
 for test in \
   json_schema_integration_smoke.sh \
