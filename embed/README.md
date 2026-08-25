@@ -99,6 +99,37 @@ collection is the in-memory Embed guarantee (page 1 + pages 2..N with page
 numbers); file naming (`blog-2.html` etc.) belongs to layer 1 and is covered by
 `contract/pagination_complete_smoke.sh`.
 
+### Cross-platform note (retained for hardening)
+
+The adapters strip `root + "/"` from absolute `loaderKeys` to make them
+root-relative. This assumes forward-slash separators. When this corpus is run
+on Windows, explicitly verify separator normalization (`C:\...\root\content\
+file` → `content/file`) rather than assuming the harness always emits forward
+slashes. Out of scope for the current checkpoint.
+
+## Expectation provenance
+
+The initial frozen expectations were migrated from the previously reviewed
+NR6/NR12 behavioural contracts, whose semantics were established during earlier
+checkpoints. Implementation output may be used as a migration aid, but
+new/changed expectations require human/contract review; **the test runner never
+regenerates or blesses expectations automatically**.
+
+Rules for changing expectations:
+
+```text
+failing implementation
+    ≠ update expected until green
+
+changed expectation requires:
+    explicit contract decision
+    rationale/history
+```
+
+There is deliberately **no** `--bless` / `--update-goldens` command. If one is
+ever added it must be deliberately guarded and must not silently rewrite the
+contract corpus.
+
 ## Running
 
 ```bash
