@@ -839,3 +839,30 @@ deferred.)
   "9bad" rejected identically by all four APIs -> exact expectation).
 - Corpus now 36 shared cases (was 32); all four adapters agree 36/36 + negative
   self-test; CLI/build unchanged at 27 modules.
+
+## CP13 — C# production binding (2026-08-26)
+
+- New C# binding at `nift-embed/bindings/csharp`: `Nift` library (net10.0),
+  a thin P/Invoke adapter over the frozen C ABI. No Nift semantics are
+  reimplemented. Surface: Engine, Context, string/int/number/bool/JSON
+  bindings, composed/partial/page renders, pagination, dependencies,
+  requirements, loader + environment providers, Found/NotFound/Error(diagnostic),
+  invalid-binding/setup failures, malformed-JSON failure family.
+- Lifetime design: SafeHandle-based deterministic disposal (Engine/Context/
+  result handles), GCHandle-passed user_data, delegates rooted as strong fields
+  for the engine lifetime, per-thread unmanaged callback scratch (safe because
+  the C ABI copies callback `out` synchronously after the callback returns -
+  c_abi.cpp callback_result; NOT global free-on-next-callback).
+- Fifth shared-corpus adapter `adapters/cs-embed` + harness
+  `apps/NiftEmbedHarness`: Embed corpus now 36/36 x5 (C++, nift-rs, C ABI, Go,
+  C#) + negative anti-agreement self-test.
+- C# binding tests: 20 focused tests (bindings, precedence, pagination,
+  concurrency x64, delegate rooting under GC, repeated create/dispose x200,
+  disposal safety) - all green.
+- ASP.NET Core dogfood `apps/NiftAspDogfood` (dotnet SDK 10.0.111 + ASP.NET
+  Core runtime 10.0.11, no separate runtime package needed): long-lived
+  Engine, repeated + concurrent requests (24/24 external + 32/request
+  internal), request-specific Context, Engine-default + Context precedence,
+  project page/pagination render, loader-seam render, environment callback,
+  Error(diagnostic) -> 500 with verbatim diagnostic, malformed-JSON family,
+  deterministic disposal on shutdown. smoke.sh: PASS.

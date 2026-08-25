@@ -38,6 +38,7 @@ ADAPTERS = {
     "rust": HERE / "adapters" / "rust-embed",
     "c-abi": HERE / "adapters" / "c-abi",
     "go": HERE / "adapters" / "go-embed",
+    "cs": HERE / "adapters" / "cs-embed",
 }
 CASES_DIR = HERE / "cases"
 

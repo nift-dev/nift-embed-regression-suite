@@ -45,14 +45,18 @@ regression and new features should expand the contract.
 
 Keep the new config-declared project-contract module in the canonical runner and extend it whenever contract namespace semantics, dependency lifecycle, or path/error behavior changes. Full-suite green evidence is required before treating the feature checkpoint as trusted.
 
-## Embed programme binding sequence (2026-08-25)
+## Embed programme binding sequence (2026-08-26)
 
-The canonical remaining Embed roadmap (CP12–CP18) is recorded in
-`nift-embed/docs/handover/EMBED-ROADMAP.md`. Sequencing: CP12 (suite expansion),
-CP13 (C# + ASP.NET dogfood), CP14 (Node/JS + HTTP dogfood), CP15 (full
-historical + expanded regression), CP16 (sanitizer/memory/platform, incl. the Go
-callback-buffer lifetime bound and loaderKeys separator normalization), CP17
-(final performance, split CLI/build vs Embed/API/bindings), CP18 (merge +
-canonicalization). Each new binding joins this suite as another shared-corpus
-adapter whose results must equal the frozen expectations (currently C++ API,
-nift-rs, C ABI, Go; C# and Node to follow).
+The canonical remaining Embed roadmap (CP13–CP19) is recorded in
+`nift-embed/docs/handover/EMBED-ROADMAP.md`. The initial production binding set
+is **C++, Go, C#, Node/JS, Python** (Rust stays the independent
+experimental/conformance implementation); Python is the last planned initial
+binding, then we stop adding languages by default. Sequencing: CP13 (C# +
+ASP.NET Core dogfood), CP14 (Node/JS + HTTP dogfood), CP15 (Python + real Python
+web-app dogfood), CP16 (full historical + expanded regression), CP17
+(sanitizer/memory/platform, incl. the Go callback-buffer lifetime bound and
+loaderKeys separator normalization), CP18 (final performance, split CLI/build vs
+Embed/API/bindings), CP19 (merge + canonicalization). Each new binding joins this
+suite as another shared-corpus adapter whose results must equal the frozen
+expectations (currently C++ API, nift-rs, C ABI, Go; C#, Node, Python to
+follow).
