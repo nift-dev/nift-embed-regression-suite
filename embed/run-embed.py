@@ -40,6 +40,7 @@ ADAPTERS = {
     "go": HERE / "adapters" / "go-embed",
     "cs": HERE / "adapters" / "cs-embed",
     "js": HERE / "adapters" / "js-embed",
+    "py": HERE / "adapters" / "py-embed",
 }
 CASES_DIR = HERE / "cases"
 

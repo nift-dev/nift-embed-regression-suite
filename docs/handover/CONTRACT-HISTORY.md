@@ -925,3 +925,41 @@ render, close context during render, close engine during a render using
 loader/env callbacks (tsfns survive), close engine + contexts during 24
 concurrent renders, repeated/idempotent close, GC pressure after
 close-during-render. All green; corpus still 36/36 x6 + anti-agreement.
+
+## CP15 — Python production binding (2026-08-26)
+
+- New Python binding at `nift-embed/bindings/python`: idiomatic Python API
+  (Engine, Context, RenderResult) over a CPython C extension (no pip
+  dependencies at runtime) which is a thin adapter over the frozen C ABI. No
+  Nift semantics reimplemented. Surface: engine defaults / context bindings /
+  precedence, string/int/number/bool/JSON, composed / {path}|{text} source /
+  partial / page-pagination renders, dependencies, requirements, loader +
+  environment providers, Found/NotFound/Error(diagnostic) exact, malformed-JSON
+  error_prefix family, invalid binding/setup failures, ABI compatibility,
+  lifetime/disposal.
+- GIL/threading model (deliberate): renders are SYNCHRONOUS with the GIL
+  released (Py_BEGIN_ALLOW_THREADS) around the C ABI call; loader/env callbacks
+  from C++ pagination worker threads re-acquire the GIL via PyGILState_Ensure.
+  Per-native-thread callback scratch buffers (provably safe: the C ABI copies
+  out synchronously after the callback returns; not the CP11-unsafe cross-thread
+  free-on-next-callback). See docs/handover/CP15-PYTHON-DESIGN.md.
+- Lifetime invariant (same as Node): a render holds a strong reference to the
+  Engine/Context; close() rejects new operations immediately and defers native
+  destruction until the last in-flight render quiesces.
+- Seventh shared-corpus adapter `adapters/py-embed` + harness
+  `tests/embed_harness.py`: Embed corpus now 36/36 x7 (C++, nift-rs, C ABI, Go,
+  C#, Node, Python) + negative anti-agreement self-test.
+- Python focused tests: 20 (bindings, precedence, invalid bindings, malformed
+  JSON family, loader/env Found/NotFound/Error, page/pagination, partial, path
+  sources, 64-way concurrent renders with callbacks, pagination callbacks from
+  C++ worker threads, close-during-render lifetime adversarial cases, repeated
+  close, GC pressure, disposed-use rejection, exception containment, long-lived
+  engine).
+- Real WSGI dogfood `app/app.py` + `app/smoke.sh` (stdlib wsgiref): long-lived
+  Engine, repeated + concurrent requests (24/24 external + 32 in-request
+  threads), request Context, engine defaults + precedence, loader seam,
+  environment callback, Error(diagnostic) -> 500 verbatim, malformed-JSON
+  family, pagination, graceful disposal. smoke.sh: PASS.
+
+This is the final planned initial production binding; after Python we stop
+adding languages by default (per the CP13 product-scope decision).
