@@ -1217,3 +1217,15 @@ Three items from review:
 3. Repository hygiene: removed the generated bindings/go/bench/bench_go ELF
    binary from Git (gitignored); audited for other tracked ELF/.so/.node/.dll/
    .a artifacts (none).
+
+## CP18 median-of-3 + third corpus-anomaly event (2026-08-26)
+
+- Part-B benches now report the MEDIAN of three measured rounds after one
+  unreported warm-up round (previously best-of-3, which biased toward fast
+  samples and contradicted the requested statistic). All six surfaces updated;
+  the report records median values (C++ 1300 ns, C ABI 1368 ns, Go 2112 ns,
+  C# 2346 ns, Node 12038 ns, Python 2786 ns; request-loop 2-11 ms/1000).
+- A third seven-adapter corpus run produced 35/36 on the first invocation
+  after a heavy build + full perf campaign; detail again lost to `tail -1`;
+  6 immediate full-output reruns clean. Same documented class: first-run-
+  after-heavy-build, never reproduced, mechanism unknown.

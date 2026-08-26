@@ -42,22 +42,23 @@ within run-to-run noise on a 10k-page ~0.1 s build.
 Raw workload (all six surfaces): one long-lived Engine, engine-level
 `site="nift"` binding, identical in-memory page/template
 (`<p>$[site]</p>` in `<main>@content</main>`), NO request Context, 50,000
-renders, best-of-3 rounds. C++/C ABI use their no-context render path; C ABI
-passes a NULL context. Go/C#/Node/Python pass nil/no context. This is an
-apples-to-apples raw binding-overhead comparison.
+renders, one unreported warm-up round + three measured rounds, reported value
+is the MEDIAN of the three measured rounds. C++/C ABI use their no-context
+render path; C ABI passes a NULL context. Go/C#/Node/Python pass nil/no
+context. This is an apples-to-apples raw binding-overhead comparison.
 
 Request-loop workload (all six): 1,000 requests, each with a fresh request
 Context carrying a request-level binding, render, destroy Context (includes
-context lifecycle cost deliberately).
+context lifecycle cost deliberately); same warm-up + median-of-3 scheme.
 
-| binding | raw ns/render | request-loop ms/1000 | rounds |
-|--------:|--------------:|---------------------:|-------:|
-| C++     | 1361          | 2                    | 3      |
-| C ABI   | 1504          | 1                    | 3      |
-| Go      | 1994          | 2                    | 3      |
-| C#      | 2440          | 3                    | 3      |
-| Node    | 11971         | 13                   | 3      |
-| Python  | 2548          | 3                    | 3      |
+| binding | raw ns/render (median) | request-loop ms/1000 (median) | rounds |
+|--------:|-----------------------:|------------------------------:|-------:|
+| C++     | 1300                   | 2                             | 3      |
+| C ABI   | 1368                   | 2                             | 3      |
+| Go      | 2112                   | 2                             | 3      |
+| C#      | 2346                   | 3                             | 3      |
+| Node    | 12038                  | 11                            | 3      |
+| Python  | 2786                   | 3                             | 3      |
 
 C++/C ABI/Go/C#/Python are within ~2x of each other; Node is ~5-9x higher per
 render, consistent with the async render + threadsafe-function callback bridge
