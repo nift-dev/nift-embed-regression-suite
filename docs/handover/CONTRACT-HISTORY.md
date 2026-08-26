@@ -1092,3 +1092,22 @@ Results:
   Checkpoint-10; the bindings are Linux-built/tested; per-OS library naming /
   header discovery / extension suffix for C#/Node/Python remains for the
   packaging/release phase.
+
+## CP17 round 2 (2026-08-26, per CP17 review)
+
+Review found the round-1 Go callback-buffer reclamation raced with new-render
+admission (an atomic counter is not an epoch boundary), and that Go
+Engine/Context Close and C# Dispose freed native state during an in-flight
+render. Repaired as enforced synchronization invariants:
+- Go: an Engine.lifecycle mutex couples render admission with quiescent
+  reclamation (no new render between zero-transition and buffer free); Close
+  is logical and defers native destruction until the last render quiesces;
+  Context likewise; new operations rejected via alive()/beginRender. Lock
+  order lifecycle -> callbackSet.mu (no inversion). Deterministic tests:
+  close-during-render via loader-callback rendezvous (engine + context), and a
+  test-only hook forcing the reclamation-vs-admission window. go test -race
+  green.
+- C#: Engine/Context Dispose is logical with deferred destruction until the
+  last in-flight render quiesces (entered-flag try/finally so a rejected
+  EnterRender never decrements); deterministic dispose-during-render tests via
+  loader-callback rendezvous. C# suite 21 -> 23.
