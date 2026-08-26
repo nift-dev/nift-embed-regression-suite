@@ -1140,3 +1140,27 @@ provider install races Close deterministically (admitted under lifecycle, Close
 blocked until the install completes). Final audit of every e.engine / e.id /
 callbackRegistry / c.ctx access confirms each is lifecycle-gated, render-count
 protected, or construction/destruction-only. Go test -race green.
+
+## CP17 round 5 (2026-08-26, per CP17 review)
+
+Final evidence issue: one seven-adapter corpus run produced "35 passed, 1
+failed" during the round-4 reverification, but the failing case/adapter was not
+captured (the invocation was piped through `tail -1`, discarding the runner's
+per-case FAIL detail). Investigation:
+- 58 consecutive full seven-adapter corpus runs (standard, fresh C# harness
+  rebuild before each, and under background CPU load) all 36/36, full output
+  preserved, immediate stop-and-capture on any failure.
+- Focused stress of the 19 callback/pagination cases (loader/env seams and
+  pagination worker callbacks - the most timing-sensitive surface) x 7 adapters
+  x 30 rounds = 3990 adapter invocations: no crashes, no non-JSON output.
+- No reproducible defect. The one-offs have occurred three times across the
+  programme, each on the FIRST corpus run immediately after heavy parallel
+  builds (make -j2 + go/cargo/dotnet/node/python), each never reproduced; the
+  most consistent (but not directly observed) explanation is a one-off
+  process-level transient under that build load. No test-harness defect was
+  found (the runner already reports per-case adapter results + stderr; no blind
+  retries were added). Future failures will be investigated with full output
+  preserved.
+- Stale Go comment cleanup: callbackSet.bufs/putC now describe the
+  lifecycle-gated quiescent-render-epoch reclamation (not "retained until
+  Engine.Close").
