@@ -1007,3 +1007,40 @@ adding languages by default (per the CP13 product-scope decision).
   vs stale-acquirer ~5ms) were reviewed and rejected. Evidence: ownership
   concurrency 25/25, race hammer 80x12 zero repro (pre-fix ~1/14). See
   docs/handover/CP2-OWNERSHIP-GATE.md.
+
+## CP16 — full historical + expanded regression campaign (2026-08-26)
+
+Scope (from EMBED-ROADMAP.md): run the complete campaign now that the
+production binding set is present — historical Nift regression suite,
+ruthless/focused suites, and the shared Embed corpus across all seven
+adapters. Divergence becomes an explicit contract decision, not an adapter
+exception. No new scope added.
+
+Results:
+- Legacy historical suite (legacy/scripts/run-tests.sh): PASS, 576
+  assertions/tests (incl. the ruthless adversarial extension, 192 checks).
+- Ruthless adversarial (legacy/scripts/ruthless-adversarial.sh): PASS, 192
+  checks.
+- Full nift-embed make correctness sweep: all test-* targets green except two
+  environment-dependent dev targets (test-jsonic-sync requires an external
+  JSONIC_DIR checkout; test-guarantee-registry requires sibling regression/
+  website repos — its CI variant test-guarantee-registry-ci is the gate and
+  passes). Excluded as environment limitations, not product failures.
+- Shared Embed corpus: 36/36 x7 adapters + negative anti-agreement self-test.
+- CLI/build contracts: 27/27.
+- nift-rs: 221/221; NR6 PASS; NR12 10/10.
+- Binding gates: Go test + -race, C# 20/20, Node 24/24, Python 21/21; Python
+  WSGI + Node HTTP dogfoods PASS.
+
+Divergences found and resolved as explicit contract decisions (both were
+stale TESTS, not product regressions):
+- tests/project_host.cpp did not compile: it expected read_shared_source to
+  return const std::string*, but the frozen RenderHost contract returns
+  HostSource{status, content, error} (the loader/host-resource contract). The
+  test now consumes the HostSource. (It was not compiled by any CI workflow.)
+- tests/persistence_concurrency_failure_smoke.sh used plain `build` to recover
+  after a failed epoch; the frozen CP3 marker-retention contract requires
+  `build --repair` (an ordinary build refuses on a stale marker). Recovery
+  steps now use `build --repair`. (It was not run by any CI workflow.)
+
+No product behavior changed during CP16.
