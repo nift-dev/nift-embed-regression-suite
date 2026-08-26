@@ -58,5 +58,5 @@ web-app dogfood), CP16 (full historical + expanded regression), CP17
 loaderKeys separator normalization), CP18 (final performance, split CLI/build vs
 Embed/API/bindings), CP19 (merge + canonicalization). Each new binding joins this
 suite as another shared-corpus adapter whose results must equal the frozen
-expectations (currently C++ API, nift-rs, C ABI, Go; C#, Node, Python to
+expectations (currently C++ API, nift-rs, C ABI, Go, C#, Node; Python to
 follow).

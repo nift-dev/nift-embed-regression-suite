@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""Nift Node binding adapter (capability layer 2).
+
+Consumes the Node binding (an N-API addon over the public C ABI): JSON request
+on stdin -> JSON result on stdout, implementing the same neutral protocol as
+the cpp-embed / rust-embed / c-abi / go-embed / cs-embed adapters. The addon is
+built from nift-embed/bindings/node via build.sh when missing.
+"""
+import json
+import os
+import subprocess
+import sys
+
+NODE_DIR = os.environ.get(
+    "NIFT_NODE_DIR", "/home/nick/Repositories/nift/nift-embed/bindings/node"
+)
+HARNESS = os.path.join(NODE_DIR, "test", "embed-harness.js")
+
+if not os.path.exists(os.path.join(NODE_DIR, "build", "nift_node.node")):
+    subprocess.run(["bash", "build.sh"], cwd=NODE_DIR, check=True)
+
+req = json.load(sys.stdin)
+proc = subprocess.run(["node", HARNESS], input=json.dumps(req), capture_output=True, text=True)
+if proc.stdout:
+    sys.stdout.write(proc.stdout)
+else:
+    json.dump({"ok": False, "error": proc.stderr.strip()}, sys.stdout)
+    sys.stdout.write("\n")

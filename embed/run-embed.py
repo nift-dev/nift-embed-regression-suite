@@ -39,6 +39,7 @@ ADAPTERS = {
     "c-abi": HERE / "adapters" / "c-abi",
     "go": HERE / "adapters" / "go-embed",
     "cs": HERE / "adapters" / "cs-embed",
+    "js": HERE / "adapters" / "js-embed",
 }
 CASES_DIR = HERE / "cases"
 

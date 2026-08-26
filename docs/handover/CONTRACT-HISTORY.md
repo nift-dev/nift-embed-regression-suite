@@ -866,3 +866,39 @@ deferred.)
   project page/pagination render, loader-seam render, environment callback,
   Error(diagnostic) -> 500 with verbatim diagnostic, malformed-JSON family,
   deterministic disposal on shutdown. smoke.sh: PASS.
+
+## CP14 — Node/JavaScript production binding (2026-08-26)
+
+- New Node binding at `nift-embed/bindings/node`: idiomatic JS API (Engine,
+  Context) over an N-API addon (raw N-API, no npm dependency) which is a thin
+  adapter over the frozen C ABI. No Nift semantics reimplemented. Surface:
+  engine defaults / context bindings / precedence, string/int/number/bool/JSON,
+  composed / {path}|{text} source / partial / page-pagination renders,
+  dependencies, requirements, loader + environment providers, Found/NotFound/
+  Error(diagnostic) with exact host diagnostics, malformed-JSON error_prefix
+  family, invalid binding/setup failures, ABI compatibility, lifetime/disposal.
+- Threading model (deliberate): renders are ASYNC via napi_async_work on a
+  libuv worker thread so the JS event loop stays free to service the
+  synchronous-from-C++ host callbacks through napi_threadsafe_function + a
+  condition variable. User loader/env callbacks run on the JS thread and must
+  return synchronously. Per-native-thread callback scratch buffers (provably
+  safe: the C ABI copies out synchronously after the callback returns; not the
+  CP11-unsafe cross-thread free-on-next-callback). See
+  docs/handover/CP14-NODE-DESIGN.md.
+- Sixth shared-corpus adapter `adapters/js-embed` + harness
+  `test/embed-harness.js`: Embed corpus now 36/36 x6 (C++, nift-rs, C ABI, Go,
+  C#, Node) + negative anti-agreement self-test.
+- Node focused tests: 18 (bindings, precedence, invalid bindings, malformed
+  JSON family, loader/env Found/NotFound/Error, page/pagination, partial,
+  64-way concurrent renders with callbacks, pagination callbacks from C++
+  worker threads, callbacks surviving GC, repeated create/dispose, GC pressure,
+  disposed-object rejection, quiescent shutdown, exception containment,
+  long-lived engine).
+- Real HTTP dogfood `app/server.js` + `app/smoke.sh` (built-in node:http):
+  long-lived Engine, repeated + concurrent requests (24/24 external + 32
+  in-request), request Context, engine defaults + precedence, loader seam,
+  environment callback, Error(diagnostic) -> 500 verbatim, malformed-JSON
+  family, pagination, graceful disposal. smoke.sh: PASS.
+- API contract note: because renders are async, an Engine/Context must not be
+  closed while its render is in flight (the dogfood surfaced this twice and was
+  corrected to await before closing).
