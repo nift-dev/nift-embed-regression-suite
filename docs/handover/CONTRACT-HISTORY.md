@@ -963,3 +963,33 @@ close-during-render. All green; corpus still 36/36 x6 + anti-agreement.
 
 This is the final planned initial production binding; after Python we stop
 adding languages by default (per the CP13 product-scope decision).
+
+## CP15 hardening (2026-08-26, per CP15 review)
+
+- Python close-during-render lifetime tests made DETERMINISTIC: the loader/
+  environment callback is a rendezvous (it fires only after the render entered
+  native execution and incremented render_count), so the test provably calls
+  close() during an in-flight native render rather than relying on scheduler
+  luck. Deterministic tests for: engine close during render, context close
+  during render, engine close while loader AND environment callback
+  infrastructure is still required, and close under 24 concurrent renders with
+  an explicit in-flight latch. Repeated-close and GC-pressure remain stress.
+  Python suite 20 -> 21, all green.
+- CI investigation: Checkpoint-10 run 32926885753 (triggered by the CP15 push,
+  which matched its path filter via test-integrity.yml) failed at
+  test-ownership-concurrency step 8 ("8 concurrent builds: >=1 succeeds and
+  refusals are live-lock" + "8 no marker left"). Reproduced locally (1-in-20):
+  a genuine ProjectOwnership acquire race - the marker is created with
+  O_CREAT|O_EXCL and flocked in a separate syscall, so a concurrent process can
+  open and flock the freshly-created marker first, classify it as Stale
+  ("unfinished build detected") and refuse, while the creator then fails to
+  flock (Live) and refuses too: BOTH builds refuse and the marker remains.
+  Fixed in ProjectOwnership::acquire: (1) the creator, on flock-failure after
+  creating its own fresh marker, briefly retries reopening+flocking (a genuine
+  concurrent build would have made exclusive_create fail first, so this only
+  runs in the race); (2) a stale-acquirer releases the lock and briefly watches
+  for a live owner before reporting Stale, so the race loser reports Live
+  instead of a misleading "unfinished build" message. Stress: ownership
+  concurrency 20/20, race-pattern hammer 40/40 (previously ~1/14 reproduced).
+  Zero-mutation, repair-campaign, conformance 9/9, host seam, C ABI x2 all
+  green. No test weakened.
