@@ -993,3 +993,17 @@ adding languages by default (per the CP13 product-scope decision).
   concurrency 20/20, race-pattern hammer 40/40 (previously ~1/14 reproduced).
   Zero-mutation, repair-campaign, conformance 9/9, host seam, C ABI x2 all
   green. No test weakened.
+
+## CP15 hardening round 2 (2026-08-26, per CP15 review)
+
+- test_gc_pressure_after_close_during_render made deterministic (loader
+  callback rendezvous; close() + gc.collect() while the native render is
+  provably in-flight).
+- Ownership race fix replaced with a protocol-correct ownership GATE:
+  ProjectOwnership::acquire() takes a blocking advisory lock on
+  .nift/.ownership-gate and holds it across the marker create+lock critical
+  section, so a fresh marker is never observable unlocked (mutual exclusion,
+  no timing heuristics). The prior asymmetric retry windows (creator ~100ms
+  vs stale-acquirer ~5ms) were reviewed and rejected. Evidence: ownership
+  concurrency 25/25, race hammer 80x12 zero repro (pre-fix ~1/14). See
+  docs/handover/CP2-OWNERSHIP-GATE.md.
