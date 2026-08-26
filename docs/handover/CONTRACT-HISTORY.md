@@ -1229,3 +1229,24 @@ Three items from review:
   after a heavy build + full perf campaign; detail again lost to `tail -1`;
   6 immediate full-output reruns clean. Same documented class: first-run-
   after-heavy-build, never reproduced, mechanism unknown.
+
+## Corpus anomaly: hypothesis-driven fresh-build transition campaign (2026-08-26)
+
+The one-offs cluster on the FIRST corpus run after a heavy parallel rebuild.
+Built a deterministic reproduction harness around exactly that transition
+(benchmarks/reproduce_corpus_anomaly.sh) and instrumented the runner so any
+adapter failure is DURABLY captured to embed/failures/ (adapter, case, argv,
+returncode, signal, stdout, stderr, wall time, load, rlimits) regardless of
+shell piping - a future 35/36 can no longer lose detail.
+
+Fresh-build -> first-run cycles, full instrumentation, no reproduction:
+serial 5, parallel 8, delay 5, cpu 4, memory 4 = 26 cycles. Combined with the
+prior ~100+ steady-state runs and 3,990 focused callback/pagination
+invocations, the anomaly has not reproduced across ~130 runs including the
+exact transition. Mechanism remains unknown; the three historical events were
+detail-less (`tail -1`) but are now impossible to lose again.
+
+Harness note: the cpu/memory variants initially appeared stalled; root cause
+was a harness-cleanup bug (background loader subshells inherit the script's
+cmdline, so pkill -f patterns never matched them; they accumulated and starved
+the rebuilds). Fixed to kill loaders by PID. Not a product issue.

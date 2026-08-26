@@ -26,6 +26,7 @@ import argparse
 import copy
 import json
 import os
+import resource
 import pathlib
 import shutil
 import subprocess
@@ -82,15 +83,56 @@ def load_cases():
     return cases
 
 
-def run_adapter(adapter, request):
-    proc = subprocess.run(
-        [str(adapter)], input=json.dumps(request), capture_output=True, text=True
-    )
+FAILURES_DIR = HERE / "failures"
+
+
+def _record_failure(case_name, adapter, argv, proc, wall, request):
+    """Durably capture the full diagnostic of an adapter failure so no corpus
+    failure can ever be lost to shell piping. Written even when the caller
+    discards stdout; the file persists across runs (gitignored)."""
+    import time as _time
+    try:
+        FAILURES_DIR.mkdir(parents=True, exist_ok=True)
+        stamp = _time.strftime("%Y%m%d-%H%M%S")
+        path = FAILURES_DIR / f"{stamp}-{adapter}.json"
+        record = {
+            "timestamp": stamp,
+            "case": case_name,
+            "adapter": adapter,
+            "argv": argv,
+            "returncode": proc.returncode,
+            "signal": -proc.returncode if proc.returncode < 0 else None,
+            "wall_time_s": round(wall, 4),
+            "stdout": proc.stdout[:4000],
+            "stderr": proc.stderr[:4000],
+            "system_loadavg": os.getloadavg(),
+            "parent_rlimits": {"cpu": resource.getrlimit(resource.RLIMIT_CPU),
+                               "as": resource.getrlimit(resource.RLIMIT_AS),
+                               "nofile": resource.getrlimit(resource.RLIMIT_NOFILE)},
+            "request": request,
+        }
+        path.write_text(json.dumps(record, indent=2, ensure_ascii=False))
+    except Exception as exc:  # pragma: no cover - diagnostics must never crash the runner
+        try:
+            (FAILURES_DIR / "error.log").open("a").write(f"{case_name} {adapter}: {exc}\n")
+        except Exception:
+            pass
+
+
+def run_adapter(adapter, request, case_name=""):
+    import time as _time
+    argv = [str(adapter)]
+    start = _time.perf_counter()
+    proc = subprocess.run(argv, input=json.dumps(request), capture_output=True, text=True)
+    wall = _time.perf_counter() - start
     if proc.returncode != 0:
-        return {"ok": False, "error": "adapter crashed: " + proc.stderr.strip()}
+        _record_failure(case_name, adapter.name, argv, proc, wall, request)
+        detail = f"adapter crashed (rc={proc.returncode}): " + proc.stderr.strip()
+        return {"ok": False, "error": detail}
     try:
         return json.loads(proc.stdout)
     except json.JSONDecodeError:
+        _record_failure(case_name, adapter.name, argv, proc, wall, request)
         return {"ok": False, "error": "adapter emitted non-JSON: " + proc.stdout.strip()}
 
 
@@ -113,7 +155,7 @@ def run_case(case):
             path.write_text(content)
         request = build_request(root, case["request"])
         expected = case["expected"]
-        results = {name: run_adapter(adapter, request) for name, adapter in ADAPTERS.items()}
+        results = {name: run_adapter(adapter, request, case["name"]) for name, adapter in ADAPTERS.items()}
         checks = {f"{name}==expected": matches_expected(expected, results[name]) for name in ADAPTERS}
         if "error_prefix" in expected:
             # Implementation-detail diagnostics (e.g. JSON parser wording) are
