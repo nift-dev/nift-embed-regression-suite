@@ -1044,3 +1044,51 @@ stale TESTS, not product regressions):
   steps now use `build --repair`. (It was not run by any CI workflow.)
 
 No product behavior changed during CP16.
+
+## CP17 — sanitizer / memory / platform campaign (2026-08-26)
+
+Scope (from EMBED-ROADMAP.md): ASan/UBSan, TSan where applicable, race
+detectors, native/FFI lifetime stress, repeated engine construction/
+destruction, concurrent renders, malformed foreign inputs, callback
+failure/panic/exception boundaries, Windows/macOS/Linux; plus the retained
+items (Go callback-output buffer lifetime bound, loaderKeys separator
+normalization, write_file_atomic-style helper audit, cross-platform binding
+behaviour).
+
+Results:
+- ASan/UBSan: test-sanitize + test-pagination-sanitize PASS (leak detection on).
+- TSan: test-pagination-tsan, test-engine-concurrency-tsan, test-engine-
+  reload-tsan PASS.
+- Go callback-output buffer lifetime bound (FIXED): the Go binding retained
+  every callback C buffer until Engine.Close() (unbounded over engine
+  lifetime). Now each render increments a per-engine renderCount and the
+  buffers are reclaimed when the last in-flight render completes (render-
+  active lifetime: the C ABI copies each callback `out` synchronously, and no
+  callback can run while no render is in flight, so freeing at renderCount==0
+  is provably safe). Bounded by peak concurrent render activity; NOT
+  free-on-next-callback. New tests assert 0 buffers retained after each of
+  200 sequential renders and after 16x100 concurrent renders (go test -race).
+- loaderKeys separator normalization (FIXED across all five adapters): the
+  engine reports loader keys with forward slashes on every platform, but a
+  Windows corpus root is backslash-separated; the adapters trimmed only the
+  root's trailing separators without normalizing, so a Windows prefix would
+  never match. Each adapter (c-abi, go, cs, js, py) now normalizes '\' -> '/'
+  on both the root prefix and every key. Go unit tests + direct checks; corpus
+  remains 36/36.
+- write_file_atomic-style helper audit: temp names are PID+counter-unique;
+  write_file/write_readonly_file use temp sibling + atomic rename
+  (fs::rename / MoveFileExW REPLACE_EXISTING|WRITE_THROUGH); write_direct_file
+  is the accepted CP3 direct-write path with mode preservation and stale-temp
+  recovery. filesystem-boundary (BH9), repair-campaign, pagination-ordering,
+  recovery-epoch all PASS.
+- Callback exception boundaries: Go recovers panics (existing test); Node and
+  Python contribute exception messages (existing tests); C# was MISSING
+  containment - a throwing user delegate could unwind through the native
+  callback into C++ (undefined behaviour). Fixed: OnLoader/OnEnvironment now
+  contain and surface the exception message as the exact host diagnostic; new
+  test (C# suite 20 -> 21).
+- Cross-platform binding behaviour: audit recorded in
+  docs/handover/CP17-CROSS-PLATFORM-AUDIT.md. The C ABI is 3-OS verified by
+  Checkpoint-10; the bindings are Linux-built/tested; per-OS library naming /
+  header discovery / extension suffix for C#/Node/Python remains for the
+  packaging/release phase.

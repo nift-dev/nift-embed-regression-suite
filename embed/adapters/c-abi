@@ -321,8 +321,15 @@ def main():
         "pagination": pagination,
     }
     if seam == "loader":
-        prefix = root.decode("utf-8").rstrip("/\\") + "/"
-        relative = {k[len(prefix):] if k.startswith(prefix) else k for k in loader_keys}
+        # Separator normalization: the engine reports loader keys with forward
+        # slashes (generic_string) on every platform, so normalize both the
+        # root prefix and each key before stripping.
+        root_norm = root.decode("utf-8").replace("\\", "/").rstrip("/")
+        prefix = root_norm + "/"
+        relative = {
+            (k.replace("\\", "/")[len(prefix):] if k.replace("\\", "/").startswith(prefix) else k.replace("\\", "/"))
+            for k in loader_keys
+        }
         result_doc["loaderKeys"] = sorted(relative)
     json.dump(result_doc, sys.stdout, ensure_ascii=False)
     sys.stdout.write("\n")
