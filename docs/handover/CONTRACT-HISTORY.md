@@ -1164,3 +1164,35 @@ per-case FAIL detail). Investigation:
 - Stale Go comment cleanup: callbackSet.bufs/putC now describe the
   lifecycle-gated quiescent-render-epoch reclamation (not "retained until
   Engine.Close").
+
+## CP18 — final performance campaign (2026-08-26)
+
+Scope (from EMBED-ROADMAP.md): CLI/build split (10k full/no-op/single-page/
+shared-dependency, many-directory, modified/hash/hybrid) and Embed/API/bindings
+split (raw render + repeated/server workload for C++, C ABI, Go, C#, Node,
+Python). Measurements are evidence, not gates; no correctness weakening.
+
+Deliverables:
+- Fixed two stale suite benchmark commands (info --names -> info --tracking
+  with separate args; build --all split) so run-performance.sh passes.
+- New benchmarks/cp18_cli_build_workload.py (full part-A set incl.
+  many-directory + modified/hash/hybrid modes) and benchmarks/embed/
+  (cpp_bench.cpp, cabi_bench.cpp, run_cp18_embed.sh) plus per-binding benches
+  (go/bench, csharp/bench, node/bench, python/bench). run-performance.sh
+  registered both.
+- Results in docs/handover/CP18-PERFORMANCE-REPORT.md (10k full ~0.1 s,
+  near-linear; raw render 1.4-2.8 us for C++/C ABI/Go/C#/Python, ~12.8 us for
+  Node; server sub-20 ms/1000). No optimization changed observable semantics.
+
+## CP18 verification note (2026-08-26)
+
+A second seven-adapter corpus run produced "35 passed, 1 failed" during CP18
+verification - again on the first corpus invocation after a heavy build, again
+without captured detail (the invocation used `| tail -1`). Strengthened
+non-reproduction evidence: ~97 consecutive full corpus runs total (regular,
+fresh C#-rebuild, under CPU load, heavy-build-then-corpus) plus 3,990 focused
+callback/pagination adapter invocations - all clean. The pattern (first run
+after heavy parallel build, never reproduced, detail always lost to `tail -1`)
+is recorded without claiming a mechanism. Process discipline going forward:
+the corpus is never piped through `tail -1` so any future failure retains its
+full per-case/adapter detail.
