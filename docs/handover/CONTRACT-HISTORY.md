@@ -1111,3 +1111,18 @@ render. Repaired as enforced synchronization invariants:
   last in-flight render quiesces (entered-flag try/finally so a rejected
   EnterRender never decrements); deterministic dispose-during-render tests via
   loader-callback rendezvous. C# suite 21 -> 23.
+
+## CP17 round 3 (2026-08-26, per CP17 review)
+
+Review found the lifetime admission was enforced only around renders; non-render
+native operations (setters, queries, Reload, loader/env install) still checked
+disposed then called native with Close able to destroy in between. Repaired as
+a general native-handle admission protocol in Go and C#: every public
+native-touching method now holds the Engine/Context lifecycle mutex across the
+native call and rejects a disposed object inside that critical section, so
+Close/Dispose can never free the handle mid-call (invariant: admitted operation
+keeps its native resource alive until it returns; Close wins admission -> the
+operation is rejected before native use). Deterministic adversarial tests via
+a test-only admission hook forcing the window: Go (engine setter, context
+setter, query vs Close) and C# (engine setter, query, context setter vs
+Dispose). Go test -race and C# suite (23 -> 26) green.
