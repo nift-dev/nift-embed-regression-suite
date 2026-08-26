@@ -2,53 +2,77 @@
 
 Status: 2026-08-26. Measurements are evidence, not gates; no correctness,
 lifetime, diagnostic, ownership or contract semantics were changed to obtain
-them. Benchmark-only fixes: two stale suite benchmark commands were brought in
-line with the unified CLI grammar (`info --names` -> `info --tracking` with
-separate args, and `build --all` split into separate args).
+them. Benchmark-only changes: corrected two stale suite benchmark commands
+(`info --names` -> `info --tracking` with separate args; `build --all` split),
+and removed a generated Go benchmark binary from the tree.
 
-## Part A — Nift CLI/build (10k pages, `benchmarks/cp18_cli_build_workload.py`)
+## Part A — CLI/build: pre-Embed baseline vs current candidate
 
-| workload                    | full       | no-op      | single-page | shared-dep |
-|-----------------------------|-----------:|-----------:|------------:|-----------:|
-| flat 10k                    | 0.116 s    | 0.084 s    | 0.092 s     | 0.149 s    |
-| many-directory (200 dirs)   | 0.137 s    | 0.088 s    | 0.090 s     | 0.162 s    |
+Baseline: `8a818f2` (immediate parent of CP1 `c02e88d`, i.e. the pre-Embed
+Nift), built from an isolated worktree with the same `-std=c++17 -O2` settings.
+Candidate: current CP18 head. Same generated projects, same workload
+definitions; only the baseline's older CLI spelling was shimmed
+(`build --all` -> `build-all`) to express the same semantic operation.
+Interleaved/alternating runs, 3 rounds, medians.
 
-Incremental-mode comparison (10k pages):
+| workload / metric        | baseline (s) | candidate (s) | ratio (cand/base) |
+|--------------------------|-------------:|--------------:|------------------:|
+| flat 10k full            | 0.123        | 0.112         | 0.91x             |
+| flat 10k no-op           | 0.078        | 0.080         | 1.03x             |
+| flat 10k single-page     | 0.094        | 0.089         | 0.94x             |
+| flat 10k shared-dep      | 0.159        | 0.143         | 0.90x             |
+| many-dir 10k full        | 0.148        | 0.128         | 0.87x             |
+| many-dir 10k no-op       | 0.088        | 0.087         | 0.98x             |
+| many-dir 10k single      | 0.093        | 0.090         | 0.97x             |
+| many-dir 10k shared      | 0.186        | 0.162         | 0.87x             |
+| mode modified full       | 0.129        | 0.117         | 0.91x             |
+| mode modified no-op      | 0.083        | 0.082         | 0.98x             |
+| mode hash full           | 0.165        | 0.153         | 0.93x             |
+| mode hash no-op          | 0.093        | 0.097         | 1.04x             |
+| mode hybrid full         | 0.167        | 0.153         | 0.92x             |
+| mode hybrid no-op        | 0.099        | 0.098         | 0.99x             |
 
-| mode     | full       | no-op      |
-|----------|-----------:|-----------:|
-| modified | 0.121 s    | 0.080 s    |
-| hash     | 0.147 s    | 0.093 s    |
-| hybrid   | 0.150 s    | 0.094 s    |
+Conclusion: the current candidate is within 0.87-1.04x of the pre-Embed
+baseline across every CLI/build workload (mostly slightly faster). The Embed
+programme did not slow ordinary Nift builds down; ratios at/above 1.0 are
+within run-to-run noise on a 10k-page ~0.1 s build.
 
-Existing suite performance gates (run-performance.sh, now green after the stale
-command fixes): tracked-project loading 2k/10k ratio 4.55x (PASS, <=8x);
-full-build 1k/4k ratio 3.35x (PASS); 10k memory peaks <= 11.8 MiB (PASS
-<=16 MiB); performance_10k full/no-op/single/shared confirmed. 10k-page builds
-complete in ~0.1 s and scale near-linearly; hash/hybrid are slightly higher
-than modified (evidence, not a blocker).
+## Part B — Embed/API/bindings (normalized workload)
 
-## Part B — Embed/API/bindings (`benchmarks/embed/run_cp18_embed.sh`)
+Raw workload (all six surfaces): one long-lived Engine, engine-level
+`site="nift"` binding, identical in-memory page/template
+(`<p>$[site]</p>` in `<main>@content</main>`), NO request Context, 50,000
+renders, best-of-3 rounds. C++/C ABI use their no-context render path; C ABI
+passes a NULL context. Go/C#/Node/Python pass nil/no context. This is an
+apples-to-apples raw binding-overhead comparison.
 
-Consistent workload: render `<p>$[site]</p>` in `<main>@content</main>` with an
-engine-default binding, 50,000 raw renders and 1,000 repeated server renders
-(each with a fresh request Context where applicable).
+Request-loop workload (all six): 1,000 requests, each with a fresh request
+Context carrying a request-level binding, render, destroy Context (includes
+context lifecycle cost deliberately).
 
-| binding | raw ns/render | server ms/1000 |
-|--------:|--------------:|---------------:|
-| C++     | 1360          | 2              |
-| C ABI   | 1390          | 1              |
-| Go      | 2111          | 2              |
-| C#      | 2549          | 4              |
-| Node    | 12810         | 15             |
-| Python  | 2758          | 3              |
+| binding | raw ns/render | request-loop ms/1000 | rounds |
+|--------:|--------------:|---------------------:|-------:|
+| C++     | 1361          | 2                    | 3      |
+| C ABI   | 1504          | 1                    | 3      |
+| Go      | 1994          | 2                    | 3      |
+| C#      | 2440          | 3                    | 3      |
+| Node    | 11971         | 13                   | 3      |
+| Python  | 2548          | 3                    | 3      |
 
-Observations (evidence, not blockers): the C++/C ABI/Go/C#/Python surfaces are
-within ~2x of each other; Node is ~5-10x higher per render, consistent with the
-async render + threadsafe-function callback bridge (a deliberate runtime-model
-property, not a correctness defect). Server-loop totals stay sub-20 ms/1000 on
-every surface.
+C++/C ABI/Go/C#/Python are within ~2x of each other; Node is ~5-9x higher per
+render, consistent with the async render + threadsafe-function callback bridge
+(a deliberate runtime-model property, not a correctness defect). Request-loop
+totals stay sub-15 ms/1000 on every surface. These are in-process request
+loops, not HTTP-server measurements.
 
-## No optimization performed
-The campaign measures the implementation as it is; no optimization that could
-change observable semantics/lifetime/diagnostics was introduced.
+## Existing suite performance gates (now green after the stale-command fixes)
+
+run-performance.sh: tracked-project loading 2k/10k ratio 4.56x (PASS <=8x);
+full-build 1k/4k ratio 3.74x (PASS); 10k memory peaks <= 11.8 MiB (PASS
+<=16 MiB); performance_10k and the CP18 workloads all complete.
+
+## Repository hygiene
+
+A generated `bindings/go/bench/bench_go` ELF binary committed during CP18 was
+removed from Git (now gitignored); only bench source/config files are tracked.
+Audit found no other tracked ELF/.so/.node/.dll/.a artifacts.

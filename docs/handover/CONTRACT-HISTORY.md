@@ -1196,3 +1196,24 @@ after heavy parallel build, never reproduced, detail always lost to `tail -1`)
 is recorded without claiming a mechanism. Process discipline going forward:
 the corpus is never piped through `tail -1` so any future failure retains its
 full per-case/adapter detail.
+
+## CP18 review repairs (2026-08-26, per CP18 review)
+
+Three items from review:
+1. Baseline comparison: restored the roadmap's original "pre-Embed baseline vs
+   final canonical candidate" requirement and ran it. Baseline 8a818f2 (parent
+   of CP1) built in an isolated worktree with equivalent -O2 settings;
+   candidate is the current head. Same projects, same workloads, interleaved
+   rounds, medians; baseline's older CLI spelling shimmed (build --all ->
+   build-all). Result: candidate is 0.87-1.04x the pre-Embed baseline across
+   flat/many-dir/mode x full/noop/single/shared workloads (mostly slightly
+   faster) - the Embed programme did not slow ordinary Nift builds down. See
+   benchmarks/cp18_baseline_comparison.py.
+2. Part-B normalization: raw workload now uses NO request Context (engine-level
+   binding) on all six surfaces (C++/C ABI use their no-context/NULL-context
+   render path); request-loop uses a fresh Context per request on all six;
+   each reports best-of-3 rounds; renamed server -> request-loop (in-process
+   loops, not HTTP serving).
+3. Repository hygiene: removed the generated bindings/go/bench/bench_go ELF
+   binary from Git (gitignored); audited for other tracked ELF/.so/.node/.dll/
+   .a artifacts (none).
