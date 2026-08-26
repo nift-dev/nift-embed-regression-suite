@@ -902,3 +902,26 @@ deferred.)
 - API contract note: because renders are async, an Engine/Context must not be
   closed while its render is in flight (the dogfood surfaced this twice and was
   corrected to await before closing).
+
+## CP14 lifetime repair (2026-08-26, per CP14 review)
+
+Review found a native lifetime hole: explicit close() freed the Engine/Context
+while an async render was in flight (UAF), because BeginRender stored raw
+native pointers and napi_refs only prevented GC, not explicit disposal.
+
+Fix (enforced binding invariant, not a caller obligation):
+- BeginRender stores the Engine/Context WRAPS and increments a per-wrapper
+  render_count; RenderComplete decrements it.
+- close() marks disposed immediately (new operations throw "has been
+  disposed") and destroys the native resource immediately when no render is in
+  flight, otherwise defers destruction to the last RenderComplete.
+- TSFNs survive while any render is in flight, so in-flight loader/env
+  callbacks remain serviceable after close().
+- GC finalizer destroys only when render_count == 0 and is idempotent; the
+  JS wrapper's explicit close remains idempotent.
+
+New adversarial lifetime tests (Node suite 18 -> 24): close engine during
+render, close context during render, close engine during a render using
+loader/env callbacks (tsfns survive), close engine + contexts during 24
+concurrent renders, repeated/idempotent close, GC pressure after
+close-during-render. All green; corpus still 36/36 x6 + anti-agreement.
