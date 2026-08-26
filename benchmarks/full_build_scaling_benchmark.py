@@ -34,7 +34,7 @@ def fixture(root,n):
 
 def run_build(root):
     started=time.perf_counter()
-    p=subprocess.run([args.nift,"build --all"],cwd=root,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
+    p=subprocess.run([args.nift,"build", "--all"],cwd=root,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
     if p.returncode: raise SystemExit(p.stderr.decode(errors="replace"))
     return time.perf_counter()-started
 
