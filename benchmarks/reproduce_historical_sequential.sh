@@ -89,8 +89,8 @@ setup_event3() {
   echo "event3 warm-artifact snapshot established"
 }
 restore_event3_managed() {
-  tar xzf "$MANAGED_SNAPSHOT" -C "$EMBED/bindings/csharp/apps" 2>/dev/null
-  ( cd "$EMBED/bindings/node" && tar xzf "$MANAGED_SNAPSHOT" -C . build 2>/dev/null )
+  tar xzf "$MANAGED_SNAPSHOT" -C "$EMBED/bindings/csharp/apps" NiftEmbedHarness/bin NiftEmbedHarness/obj 2>/dev/null
+  ( cd "$EMBED/bindings/node" && tar xzf "$MANAGED_SNAPSHOT" -C . build/nift_node.node 2>/dev/null )
   ( cd "$EMBED/bindings/python" && tar xzf "$MANAGED_SNAPSHOT" -C . nift 2>/dev/null )
 }
 
