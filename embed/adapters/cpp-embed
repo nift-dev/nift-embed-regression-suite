@@ -55,6 +55,9 @@ proc = subprocess.run(args, input=stdin_text, capture_output=True, text=True)
 if not proc.stdout:
     json.dump({"ok": False, "error": proc.stderr.strip()}, sys.stdout)
     sys.stdout.write("\n")
+    if proc.returncode != 0:
+        sys.exit(proc.returncode)
+    sys.stdout.write("\n")
     sys.exit(0)
 try:
     result = json.loads(proc.stdout)

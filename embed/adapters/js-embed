@@ -23,6 +23,13 @@ req = json.load(sys.stdin)
 proc = subprocess.run(["node", HARNESS], input=json.dumps(req), capture_output=True, text=True)
 if proc.stdout:
     sys.stdout.write(proc.stdout)
+elif proc.returncode != 0:
+    # Propagate the harness crash so the runner records it durably (a broken
+    # adapter must never be swallowed into a JSON error with exit 0).
+    json.dump({"ok": False, "error": proc.stderr.strip()}, sys.stdout)
+    sys.stdout.write("\n")
+    sys.exit(proc.returncode)
 else:
     json.dump({"ok": False, "error": proc.stderr.strip()}, sys.stdout)
+    sys.stdout.write("\n")
     sys.stdout.write("\n")

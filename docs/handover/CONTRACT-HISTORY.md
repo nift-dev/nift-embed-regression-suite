@@ -1250,3 +1250,34 @@ Harness note: the cpu/memory variants initially appeared stalled; root cause
 was a harness-cleanup bug (background loader subshells inherit the script's
 cmdline, so pkill -f patterns never matched them; they accumulated and starved
 the rebuilds). Fixed to kill loaders by PID. Not a product issue.
+
+## Corpus anomaly: REPRODUCED and root-caused (2026-08-26)
+
+A faithful cold-transition reproduction harness (clean artifacts -> exact heavy
+parallel build -> full CP18 performance campaign -> first corpus run ONCE) with
+durable diagnostics REPRODUCED the failure at trial 8 (the exact suspected
+transition): the PYTHON adapter crashed at import on every case with
+`ImportError: undefined symbol: WatchList::load(...)`.
+
+Root cause: the Python (and Node) binding build.sh ran `make libnift_c.so`
+(which rewrites the shared .build/pic/*.o) and then linked those same objects.
+When build.sh's own `make libnift_c.so` raced a concurrent `make libnift_c.so`
+from a parallel build, the extension linked a torn WatchList.o -> undefined
+symbol at import -> every python case failed. The py/js/cs/go/cpp/rust-embed
+adapters also swallowed harness crashes into JSON errors with exit 0, so the
+durable failure capture never fired.
+
+Fixes:
+- python + node build.sh now compile the frozen C ABI into a PRIVATE
+  build/cabi-pic/ directory (no shared .build/pic rewrites, safe under
+  concurrent make) and add a fail-fast import/load check so a torn link fails
+  the build instead of the first user run.
+- all six harness-running adapters now propagate a crashed harness subprocess
+  as a non-zero exit, so the runner records the failure durably.
+
+Post-fix: 13 faithful cold-transition cycles (past the trial-8 reproduction
+point) clean; full gates green. Honest caveat: this reproduced defect is in
+the same "first-run after heavy parallel build" class as the three historical
+events, but those events were preceded by SEQUENTIAL builds, so their exact
+mechanism may differ; the historical detail was lost each time. Failure
+capture is now a property of the harness, not shell discipline.

@@ -95,6 +95,22 @@ def _record_failure(case_name, adapter, argv, proc, wall, request):
         FAILURES_DIR.mkdir(parents=True, exist_ok=True)
         stamp = _time.strftime("%Y%m%d-%H%M%S")
         path = FAILURES_DIR / f"{stamp}-{adapter}.json"
+        mem = disk = None
+        try:
+            with open("/proc/meminfo") as f:
+                m = {}
+                for line in f:
+                    k, v = line.split(":", 1)
+                    m[k] = v.strip()
+                mem = {"MemFree_kB": m.get("MemFree"), "MemAvailable_kB": m.get("MemAvailable"),
+                       "Cached_kB": m.get("Cached")}
+        except Exception:
+            pass
+        try:
+            st = os.statvfs(str(HERE))
+            disk = {"free_bytes": st.f_bavail * st.f_frsize}
+        except Exception:
+            pass
         record = {
             "timestamp": stamp,
             "case": case_name,
@@ -106,6 +122,8 @@ def _record_failure(case_name, adapter, argv, proc, wall, request):
             "stdout": proc.stdout[:4000],
             "stderr": proc.stderr[:4000],
             "system_loadavg": os.getloadavg(),
+            "free_memory": mem,
+            "disk_free_bytes": disk,
             "parent_rlimits": {"cpu": resource.getrlimit(resource.RLIMIT_CPU),
                                "as": resource.getrlimit(resource.RLIMIT_AS),
                                "nofile": resource.getrlimit(resource.RLIMIT_NOFILE)},
