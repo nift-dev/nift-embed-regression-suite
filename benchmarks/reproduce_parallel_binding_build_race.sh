@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# Reproduces the PARALLEL-BINDING-BUILD RACE discovered during the anomaly
-# investigation (not the historical sequence): concurrent make libnift_c.so +
-# python/node build.sh wrote the same .build/pic objects, tearing WatchList.o
-# and making the python extension fail to import.
+# Stress/regression reproducer for the PARALLEL-BINDING-BUILD RACE discovered
+# during the anomaly investigation. This is NOT a historical-sequence reproducer
+# (the three historical events used SEQUENTIAL builds; see
+# reproduce_historical_sequential.sh). Here the main make and the python/node
+# build.sh run CONCURRENTLY, racing on the (now-fixed) intermediate object
+# paths. With the per-invocation-temp-dir + atomic-publication build.sh fix this
+# is expected to always pass; a failure here means the build race has regressed.
 #
-# Each trial is the FULL historical sequence (reconstructed from the three
-# spontaneous occurrences):
+# Each trial:
 #   STATE A (cold artifacts)
-#   -> PARALLEL build (the discovered race, NOT the historical ordering)
-#   -> the full CP18 performance campaign (run-performance.sh, exercises
-#      C++, C ABI, Go, C#, Node, Python runtimes)
+#   -> PARALLEL build (main make | cpp | go | rust | cs | node | python)
 #   -> FIRST corpus run (exactly once)
 #   -> durable diagnostics on any failure
 #   -> return to STATE A
 #
-# Usage: reproduce_cold_transition.sh [trials]
+# Usage: reproduce_parallel_binding_build_race.sh [trials]
 set -u
 TRIALS="${1:-20}"
 EMBED=/home/nick/Repositories/nift/nift-embed
@@ -31,7 +31,9 @@ clean_cold() {
 }
 
 heavy_build() {
-  # Exact parallel sequence used before the historical failures.
+  # Parallel build: this reproduces the binding-build race found during
+  # investigation (concurrent writers to .build/pic). NOT the historical
+  # sequence, which was sequential across these commands.
   ( cd "$EMBED" && make -j2 libnift_c.a libnift_c.so nift >/dev/null 2>&1 ) &
   B1=$!
   ( cd "$EMBED" && mkdir -p .build && g++ -std=c++17 -O2 -pthread -Isrc -Iinclude -Iminifypp/include -Iminifypp/src \

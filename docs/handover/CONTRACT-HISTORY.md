@@ -1306,3 +1306,31 @@ reproducer. Adapter crash propagation + durable runner capture retained.
 Residual: three historical 35/36 events remain mechanistically unexplained
 (detail lost to tail -1 before durable capture existed); future failures are
 now fully captured.
+
+## Corpus anomaly: event-faithful campaign, event 3 warm-state (2026-08-26)
+
+Review correction: the earlier "faithful sequential" reproducer rebuilt ALL seven
+surfaces each trial (cold), which erased historical event 3's distinctive
+pre-state (pre-existing C#/Node/Python artifacts left untouched). Rewritten with
+explicit event1|event2|event3 modes, each with its own starting artifact state:
+
+- event1 (CP17 round-4): cold -> make -j2 libnift_c.a libnift_c.so nift -> cpp
+  -> go -> rust -> cs -> node (conditional: only if addon absent, as
+  historically) -> python -> FIRST corpus run.
+- event2 (CP18): cold -> make -j2 libnift_c.a libnift_c.so nift -> cpp -> go ->
+  rust -> cs -> node -> python -> full run-performance.sh -> FIRST corpus run.
+- event3 (CP18 median): WARM managed artifacts (cs/node/python built once and
+  snapshotted, restored NOT rebuilt each trial) -> make -j2 nift -> cpp -> go ->
+  rust -> full run-performance.sh -> FIRST corpus run.
+
+Per-event results (each trial observed only at its first corpus invocation;
+durable capture armed):
+  event 1: 11 faithful cycles, 0 failures
+  event 2: 15 faithful cycles, 0 failures
+  event 3: 12 faithful cycles, 0 failures
+No reproduction in any of the three historical workflows. The three historical
+35/36 events remain mechanistically unexplained; future failures are now fully
+captured (adapter, case, rc, signal, stdout/stderr, expected/actual, system
+state). reproduce_parallel_binding_build_race.sh is documented strictly as the
+stress/regression reproducer for the discovered parallel-build race (all
+historical-sequence claims removed).
