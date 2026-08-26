@@ -1126,3 +1126,17 @@ operation is rejected before native use). Deterministic adversarial tests via
 a test-only admission hook forcing the window: Go (engine setter, context
 setter, query vs Close) and C# (engine setter, query, context setter vs
 Dispose). Go test -race and C# suite (23 -> 26) green.
+
+## CP17 round 4 (2026-08-26, per CP17 review)
+
+Review found Go SetLoader / SetEnvironmentProvider accessed the callback
+registry and read e.id OUTSIDE the lifecycle mutex: after Close (e.id==0,
+registry entry deleted) they could nil-dereference before the closed check, and
+the e.id read raced Close. Both methods now begin with the lifecycle admission
+(lock, closed check, test hook, e.id read, registry lookup with an explicit
+!ok guard, callback-state mutation, native install) as one protected
+operation. Regression tests: provider setters after Close do not panic; a
+provider install races Close deterministically (admitted under lifecycle, Close
+blocked until the install completes). Final audit of every e.engine / e.id /
+callbackRegistry / c.ctx access confirms each is lifecycle-gated, render-count
+protected, or construction/destruction-only. Go test -race green.
