@@ -1281,3 +1281,28 @@ the same "first-run after heavy parallel build" class as the three historical
 events, but those events were preceded by SEQUENTIAL builds, so their exact
 mechanism may differ; the historical detail was lost each time. Failure
 capture is now a property of the harness, not shell discipline.
+
+## Corpus anomaly: correction + faithful sequential campaign (2026-08-26)
+
+CORRECTION to the previous "REPRODUCED and root-caused" record: the parallel
+binding-build race (WatchList::load undefined symbol) was reproduced by a
+HARNESS that ran make + node + python builds CONCURRENTLY. The three HISTORICAL
+events were preceded by SEQUENTIAL builds, so that race does not explain them.
+The race fix is real and kept; the historical events remain UNEXPLAINED.
+
+Faithful SEQUENTIAL historical campaign (clean -> make -j2 -> cpp harness ->
+go -> rust -> cs -> node -> python, then full CP18 perf campaign where
+historically present, then FIRST corpus run once; durable diagnostics): 20
+complete cold cycles (8 without perf, 12 with perf), no reproduction.
+
+Same-binding build concurrency hardened: python/node build.sh now compile the
+C ABI into a PER-INVOCATION temp pic directory and publish the final artifact
+atomically (concurrent same-binding builds verified safe). Fail-fast load
+checks retained. reproducer renamed
+benchmarks/reproduce_parallel_binding_build_race.sh (the parallel race);
+benchmarks/reproduce_historical_sequential.sh is the faithful sequential
+reproducer. Adapter crash propagation + durable runner capture retained.
+
+Residual: three historical 35/36 events remain mechanistically unexplained
+(detail lost to tail -1 before durable capture existed); future failures are
+now fully captured.

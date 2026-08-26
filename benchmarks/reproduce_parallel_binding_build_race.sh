@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Faithful cold-transition reproduction of the corpus 35/36 anomaly.
+# Reproduces the PARALLEL-BINDING-BUILD RACE discovered during the anomaly
+# investigation (not the historical sequence): concurrent make libnift_c.so +
+# python/node build.sh wrote the same .build/pic objects, tearing WatchList.o
+# and making the python extension fail to import.
 #
 # Each trial is the FULL historical sequence (reconstructed from the three
 # spontaneous occurrences):
 #   STATE A (cold artifacts)
-#   -> exact heavy build of all surfaces
+#   -> PARALLEL build (the discovered race, NOT the historical ordering)
 #   -> the full CP18 performance campaign (run-performance.sh, exercises
 #      C++, C ABI, Go, C#, Node, Python runtimes)
 #   -> FIRST corpus run (exactly once)
