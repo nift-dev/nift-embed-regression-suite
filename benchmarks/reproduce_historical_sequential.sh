@@ -10,8 +10,16 @@
 #                          cpp -> go -> rust -> cs -> node -> python ->
 #                          full run-performance.sh -> corpus
 #   event3 (CP18 median):  WARM managed binding artifacts (cs/node/python built
-#                          beforehand, NOT rebuilt) -> make -j2 nift -> cpp ->
-#                          go -> rust -> full run-performance.sh -> corpus
+#                          beforehand, snapshot restored NOT rebuilt) ->
+#                          make -j2 nift -> cpp -> go -> rust ->
+#                          full run-performance.sh -> corpus
+#
+# FAIL-FAST evidence discipline: every required step (build, performance
+# campaign, snapshot creation, snapshot restore, restore verification) must
+# complete successfully or the trial aborts and is NOT counted. The perf
+# campaign output is saved per event/trial (distinguishing timeout rc=124 from
+# benchmark failure) and event-3 restored-artifact hashes are compared against
+# the established warm snapshot.
 #
 # Usage: reproduce_historical_sequential.sh event1|event2|event3 [trials]
 set -u
@@ -22,6 +30,10 @@ SUITE=/home/nick/Repositories/nift/nift-embed-regression-suite
 RUNS=/home/nick/Repositories/nift/nift-rs
 
 MANAGED_SNAPSHOT=/tmp/nift-event3-managed.tar.gz
+# Per-invocation log dir: NEVER destroyed so evidence accumulates across runs.
+PERF_LOG_DIR="$SUITE/benchmarks/perf-logs/$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$PERF_LOG_DIR"
+echo "perf logs: $PERF_LOG_DIR"
 
 clean_cold() {
   ( cd "$EMBED" && make clean >/dev/null 2>&1; rm -rf .build libnift_c.a libnift_c.so nift \
@@ -45,13 +57,25 @@ build_cs()   { ( cd "$EMBED/bindings/csharp/apps/NiftEmbedHarness" && dotnet bui
 build_node() { ( cd "$EMBED/bindings/node" && bash build.sh >/dev/null 2>&1 ); }
 build_py()   { ( cd "$EMBED/bindings/python" && bash build.sh >/dev/null 2>&1 ); }
 
-# Event-1 historical Node step: the addon was only rebuilt if absent.
 build_node_conditional() {
   ( cd "$EMBED/bindings/node" && { [ -f build/nift_node.node ] || bash build.sh >/dev/null 2>&1; } )
 }
 
+# Fail-fast performance campaign: output saved per event/trial; rc=124 is a
+# timeout, anything else a benchmark failure. Never proceeds on non-zero.
 run_perf_campaign() {
-  timeout 1800 bash "$SUITE/run-performance.sh" "$EMBED/nift" >/dev/null 2>&1
+  local label="$1" trial="$2"
+  local out="$PERF_LOG_DIR/${label}-t${trial}.log"
+  timeout 1800 bash "$SUITE/run-performance.sh" "$EMBED/nift" >"$out" 2>&1
+  local rc=$?
+  if [ $rc -ne 0 ]; then
+    local why="failed"
+    [ $rc -eq 124 ] && why="TIMEOUT"
+    echo "=== PERF $why (event=$label, trial=$trial, rc=$rc) log: $out ==="
+    tail -30 "$out"
+    return 1
+  fi
+  return 0
 }
 
 run_corpus_once() {
@@ -71,8 +95,20 @@ run_corpus_once() {
   return 0
 }
 
-# event3: establish the warm managed-artifact state ONCE (cs/node/python built
-# and snapshot), then per trial restore that snapshot WITHOUT rebuilding them.
+# Managed artifacts and their hashes for event-3 warm-state enforcement.
+cs_dll() { find "$EMBED/bindings/csharp/apps/NiftEmbedHarness/bin" -name 'embed-harness.dll' -print -quit 2>/dev/null; }
+node_addon() { echo "$EMBED/bindings/node/build/nift_node.node"; }
+py_ext() { find "$EMBED/bindings/python/nift" -maxdepth 1 -name '_nift*.so' -print -quit 2>/dev/null; }
+managed_hash() {
+  local p="$1"
+  if [ -n "$p" ] && [ -f "$p" ]; then sha256sum "$p" | cut -d' ' -f1; else echo "MISSING"; fi
+}
+managed_state() {
+  echo "cs=$(managed_hash "$(cs_dll)") node=$(managed_hash "$(node_addon)") py=$(managed_hash "$(py_ext)")"
+}
+
+# event3: build everything once, snapshot cs/node/python, record the warm
+# hashes, then per trial restore the snapshot WITHOUT rebuilding them.
 setup_event3() {
   clean_cold
   ( cd "$EMBED" && make -j2 libnift_c.a libnift_c.so nift >/dev/null 2>&1 ) || return 1
@@ -82,16 +118,32 @@ setup_event3() {
   build_cs   || return 1
   build_node || return 1
   build_py   || return 1
-  tar czf "$MANAGED_SNAPSHOT" \
-    -C "$EMBED/bindings/csharp/apps" NiftEmbedHarness/bin NiftEmbedHarness/obj \
-    -C "$EMBED/bindings/node" build \
-    -C "$EMBED/bindings/python" nift 2>/dev/null
-  echo "event3 warm-artifact snapshot established"
+  if ! tar czf "$MANAGED_SNAPSHOT" \
+      -C "$EMBED/bindings/csharp/apps" NiftEmbedHarness/bin NiftEmbedHarness/obj \
+      -C "$EMBED/bindings/node" build/nift_node.node \
+      -C "$EMBED/bindings/python" nift 2>/dev/null; then
+    echo "event3 snapshot creation FAILED" >&2
+    return 1
+  fi
+  tar tzf "$MANAGED_SNAPSHOT" 2>/dev/null | grep -q "NiftEmbedHarness/bin" || { echo "snapshot missing cs" >&2; return 1; }
+  tar tzf "$MANAGED_SNAPSHOT" 2>/dev/null | grep -q "nift_node.node" || { echo "snapshot missing node" >&2; return 1; }
+  tar tzf "$MANAGED_SNAPSHOT" 2>/dev/null | grep -q "nift/" || { echo "snapshot missing py" >&2; return 1; }
+  echo "event3 warm-artifact snapshot established: $(managed_state)"
 }
+
 restore_event3_managed() {
-  tar xzf "$MANAGED_SNAPSHOT" -C "$EMBED/bindings/csharp/apps" NiftEmbedHarness/bin NiftEmbedHarness/obj 2>/dev/null
-  ( cd "$EMBED/bindings/node" && tar xzf "$MANAGED_SNAPSHOT" -C . build/nift_node.node 2>/dev/null )
-  ( cd "$EMBED/bindings/python" && tar xzf "$MANAGED_SNAPSHOT" -C . nift 2>/dev/null )
+  # Remove the managed artifacts FIRST so a failed extraction cannot silently
+  # fall back to the previous trial's files; verification below catches it.
+  rm -rf "$EMBED/bindings/csharp/apps/NiftEmbedHarness/bin" "$EMBED/bindings/csharp/apps/NiftEmbedHarness/obj"
+  rm -f  "$EMBED/bindings/node/build/nift_node.node"
+  rm -f  "$EMBED/bindings/python/nift/_nift"*.so
+  tar xzf "$MANAGED_SNAPSHOT" -C "$EMBED/bindings/csharp/apps" NiftEmbedHarness/bin NiftEmbedHarness/obj 2>/dev/null || return 1
+  ( cd "$EMBED/bindings/node" && tar xzf "$MANAGED_SNAPSHOT" -C . build/nift_node.node 2>/dev/null ) || return 1
+  ( cd "$EMBED/bindings/python" && tar xzf "$MANAGED_SNAPSHOT" -C . nift 2>/dev/null ) || return 1
+  [ -n "$(cs_dll)" ] || { echo "restore: cs dll MISSING" >&2; return 1; }
+  [ -f "$(node_addon)" ] || { echo "restore: node addon MISSING" >&2; return 1; }
+  [ -n "$(py_ext)" ] || { echo "restore: py ext MISSING" >&2; return 1; }
+  return 0
 }
 
 rm -rf "$SUITE/embed/failures"
@@ -115,19 +167,23 @@ case "$EVENT" in
       clean_cold
       ( cd "$EMBED" && make -j2 libnift_c.a libnift_c.so nift >/dev/null 2>&1 ) || { echo "make failed"; exit 2; }
       build_cpp && build_go && build_rust && build_cs && build_node && build_py || { echo "build failed"; exit 2; }
-      run_perf_campaign
+      run_perf_campaign event2 "$t" || exit 2
       run_corpus_once event2 "$t" || exit 1
       tail -1 "$SUITE/embed/failures/trial-run.log" | sed "s/^/  event2 t$t first-run: /"
     done
     ;;
   event3)
     setup_event3 || { echo "event3 setup failed"; exit 2; }
+    SNAP_HASH="$(managed_state)"
     for t in $(seq 1 "$TRIALS"); do
       echo "TRIAL $t/$TRIALS (event3): restore warm cs/node/python (NOT rebuilt) -> make nift -> cpp/go/rust -> perf -> first corpus"
-      restore_event3_managed
+      restore_event3_managed || { echo "event3 restore FAILED (trial $t)"; exit 2; }
+      local_hash="$(managed_state)"
+      [ "$local_hash" = "$SNAP_HASH" ] || { echo "restore hash MISMATCH (trial $t): got $local_hash want $SNAP_HASH" >&2; exit 2; }
+      echo "  restored: $local_hash"
       ( cd "$EMBED" && make -j2 nift >/dev/null 2>&1 ) || { echo "make nift failed"; exit 2; }
       build_cpp && build_go && build_rust || { echo "build failed"; exit 2; }
-      run_perf_campaign
+      run_perf_campaign event3 "$t" || exit 2
       run_corpus_once event3 "$t" || exit 1
       tail -1 "$SUITE/embed/failures/trial-run.log" | sed "s/^/  event3 t$t first-run: /"
     done
@@ -137,4 +193,4 @@ case "$EVENT" in
     exit 2
     ;;
 esac
-echo "historical campaign ($EVENT): $TRIALS complete cycles, no reproduction"
+echo "historical campaign ($EVENT): $TRIALS complete fail-fast cycles, no reproduction"

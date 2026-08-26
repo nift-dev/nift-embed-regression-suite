@@ -137,6 +137,38 @@ def _record_failure(case_name, adapter, argv, proc, wall, request):
             pass
 
 
+def _record_mismatch(case_name, expected, results, checks):
+    """Durably capture a SEMANTIC mismatch: every adapter emitted valid JSON and
+    exited 0, but at least one contract check failed. Kept separate from
+    _record_failure (crash/non-JSON) so the two classes are distinguishable."""
+    import time as _time
+    try:
+        FAILURES_DIR.mkdir(parents=True, exist_ok=True)
+        stamp = _time.strftime("%Y%m%d-%H%M%S")
+        path = FAILURES_DIR / f"{stamp}-mismatch-{case_name}.json"
+        try:
+            st = os.statvfs(str(HERE))
+            disk = {"free_bytes": st.f_bavail * st.f_frsize}
+        except Exception:
+            disk = None
+        record = {
+            "timestamp": stamp,
+            "case": case_name,
+            "kind": "expectation-mismatch",
+            "checks": checks,
+            "expected": expected,
+            "actual": results,
+            "system_loadavg": os.getloadavg(),
+            "disk_free_bytes": disk,
+        }
+        path.write_text(json.dumps(record, indent=2, ensure_ascii=False))
+    except Exception as exc:  # pragma: no cover - diagnostics must never crash the runner
+        try:
+            (FAILURES_DIR / "error.log").open("a").write(f"mismatch {case_name}: {exc}\n")
+        except Exception:
+            pass
+
+
 def run_adapter(adapter, request, case_name=""):
     import time as _time
     argv = [str(adapter)]
@@ -200,6 +232,7 @@ def run_main():
         else:
             failures += 1
             print("FAIL", name)
+            _record_mismatch(name, expected, results, checks)
             for key, ok in checks.items():
                 if not ok:
                     print("   ", key, "false")

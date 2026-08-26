@@ -1334,3 +1334,35 @@ captured (adapter, case, rc, signal, stdout/stderr, expected/actual, system
 state). reproduce_parallel_binding_build_race.sh is documented strictly as the
 stress/regression reproducer for the discovered parallel-build race (all
 historical-sequence claims removed).
+
+## Corpus anomaly: fail-fast evidence campaign (2026-08-26)
+
+Review correction: the prior event campaign could silently count trials whose
+performance campaign failed/timed out (rc unchecked, output discarded) and whose
+event-3 snapshot restores were unverified. Repaired:
+
+- run_perf_campaign now checks the campaign exit status (rc=124 reported as
+  TIMEOUT vs benchmark failure), saves per-trial output to
+  benchmarks/perf-logs/<stamp>/ (timestamped per invocation, NEVER destroyed),
+  and aborts the trial un-counted on any failure.
+- event3 snapshot creation is checked and verified; each restore removes the
+  managed artifacts FIRST, checks every extraction, verifies the cs dll / node
+  addon / python extension exist, and compares per-trial hashes against the
+  established warm snapshot (byte-identical across all trials).
+- run-performance.sh NIFT_C_ABI default fixed: was $NIFT_BIN/../../libnift_c.so
+  (one directory too high -> part B silently skipped C#/Node/Python); now
+  dirname($NIFT_BIN)/libnift_c.so. Part B verified to exercise all six
+  runtimes (C++, C ABI, Go, C#, Node, Python) in every trial log.
+- run-embed.py now durably records expectation-mismatch failures too
+  (failures/<stamp>-mismatch-<case>.json), so "future failures are fully
+  captured" covers semantic mismatches, not only crashes/non-JSON.
+
+REPLACEMENT counts (fail-fast enforced; every trial required the full six-runtime
+performance campaign, verified snapshot restore, and a first corpus run that all
+completed or the trial was not counted; per-trial perf logs retained):
+  event 1: 11 cycles (prior campaign, no perf dependency), 0 failures
+  event 2: 15 fail-fast cycles, 0 failures  (perf logs: 053434 + 063746)
+  event 3: 12 fail-fast cycles, 0 failures  (perf logs: 070402)
+No reproduction in any of the three historical workflows. The three historical
+35/36 events remain mechanistically unexplained; recurrence is now fully and
+structurally captured.
