@@ -1399,3 +1399,33 @@ failure with frozen state + hash diff); run-embed.py diagnostics are now
 collision-proof (NIFT_CAMPAIGN_ID / NIFT_CAMPAIGN_RUN / nanosecond timestamp /
 kind in every structured filename and record); generated campaign data is
 gitignored (benchmarks/warm-baseline/).
+
+## CP19: rendering API direction (render / render_path / render_text) (2026-08-27)
+
+Stable non-ambiguous rendering surface implemented across the canonical C++
+API, the C ABI and every production binding (Go, C#, Node/JS, Python) plus the
+Rust conformance implementation:
+
+- render(name) / render(name, ctx)  -> ALWAYS a tracked page name (never a path
+  or literal source); unknown names are controlled unknown-page errors.
+- render_path(path) / (path, ctx)   -> ALWAYS a filesystem path; a missing path
+  is a controlled missing-path error, never reinterpreted as text.
+- render_text(text) / (text, ctx)   -> ALWAYS in-memory template source; never
+  checked against the filesystem.
+- render(Source, Source) / (..., ctx) -> typed full composition (path/path,
+  text/text, mixed). render_string/RenderString/renderString removed.
+- Omitted context == fresh empty context; request state never leaks between
+  no-context renders.
+
+Binding mappings: Go Render/RenderWithContext/RenderPath/RenderPathWithContext/
+RenderText/RenderTextWithContext; C# Render/RenderPath/RenderText; JS
+render/renderPath/renderText (composition renderSources); Python
+render/render_path/render_text (composition render_sources). C ABI adds
+nift_engine_render_path/nift_engine_render_text (nift_source retained as the
+ownership-explicit composition primitive).
+
+Required API tests added on every surface; full gates green: corpus 36/36 x 7,
+anti-agreement self-test, CLI 27/27, C++ conformance 9/9, engine-render-api,
+C ABI (incl. new path/text entry points), Go test -race, C# 27/27, Node 25/25,
+Python 22/22, Rust 222/222. Product-positioning boundary preserved in
+CP19-RENDER-API.md. See nift-embed/docs/handover/CP19-RENDER-API.md.
