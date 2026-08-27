@@ -1366,3 +1366,36 @@ completed or the trial was not counted; per-trial perf logs retained):
 No reproduction in any of the three historical workflows. The three historical
 35/36 events remain mechanistically unexplained; recurrence is now fully and
 structurally captured.
+
+## Quiet warm-baseline campaign: 500 sequential warm corpus passes (2026-08-27)
+
+Bounded investigation per reviewer: can the historical 35/36 recur during
+ORDINARY repeated corpus execution, independent of the heavy workload and
+artifact transitions that preceded the three observed failures?
+
+- Built all seven adapter surfaces ONCE (fresh), recorded a JSON baseline
+  (repo heads c07fd76 / 3015472 / f761573, clean/dirty state, SHA-256 of every
+  adapter artifact, toolchain versions, initial loadavg/mem/disk), 10 untimed
+  warm-ups, 10 timed estimation passes, then 500 sequential timed passes.
+- Discipline: one corpus process at a time; no rebuilds, no cleans, no
+  run-performance.sh, no deliberate load between passes; stable run numbers
+  1..500; every pass appended to a durable campaign log with start/end/
+  duration/summary; collision-proof diagnostics (campaign id + run number +
+  nanosecond timestamp + kind) and prior evidence never cleared.
+- Result: 500/500 passes "Embed contract: 36 passed, 0 failed"; total 115.7
+  min, per-pass min 13.0s / median 13.8s / p95 14.5s / max 15.0s; artifact
+  hashes byte-identical to baseline at campaign end; zero timeouts, zero
+  structured failure records, zero retries.
+- Interpretation: no failure reproduced during 500 sequential warm corpus runs
+  without preceding load. This materially lowers the estimated ordinary
+  steady-state recurrence risk and strengthens the inference that the
+  historical failures depended on preceding workload, artifact transition, or
+  environmental state. It does not establish that recurrence is impossible or
+  identify the original mechanism.
+
+Harness/evidence improvements retained: benchmarks/warm_baseline_campaign.sh
+(reusable; baseline record, warmups, timed estimate, pass loop, stop-on-
+failure with frozen state + hash diff); run-embed.py diagnostics are now
+collision-proof (NIFT_CAMPAIGN_ID / NIFT_CAMPAIGN_RUN / nanosecond timestamp /
+kind in every structured filename and record); generated campaign data is
+gitignored (benchmarks/warm-baseline/).

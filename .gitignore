@@ -15,3 +15,4 @@ htmlcov/
 Thumbs.db
 .ownership-gate
 failures/
+benchmarks/warm-baseline/

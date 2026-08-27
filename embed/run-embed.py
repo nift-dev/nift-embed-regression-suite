@@ -86,6 +86,20 @@ def load_cases():
 FAILURES_DIR = HERE / "failures"
 
 
+def _diag_stamp(kind):
+    """Collision-proof diagnostic identifier: campaign id + run number +
+    nanosecond timestamp + failure kind. Rapid campaigns (thousands of passes)
+    with the same adapter/case within one second cannot overwrite each other."""
+    import time as _time
+    campaign = os.environ.get("NIFT_CAMPAIGN_ID", "manual")
+    run = os.environ.get("NIFT_CAMPAIGN_RUN", "single")
+    return f"{campaign}-r{run}-t{_time.time_ns()}-{kind}"
+
+
+def _safe(name):
+    return "".join(c if c.isalnum() or c in "-_" else "_" for c in name)
+
+
 def _record_failure(case_name, adapter, argv, proc, wall, request):
     """Durably capture the full diagnostic of an adapter failure so no corpus
     failure can ever be lost to shell piping. Written even when the caller
@@ -94,7 +108,7 @@ def _record_failure(case_name, adapter, argv, proc, wall, request):
     try:
         FAILURES_DIR.mkdir(parents=True, exist_ok=True)
         stamp = _time.strftime("%Y%m%d-%H%M%S")
-        path = FAILURES_DIR / f"{stamp}-{adapter}.json"
+        path = FAILURES_DIR / f"{_diag_stamp('crash')}-{_safe(case_name)}-{adapter}.json"
         mem = disk = None
         try:
             with open("/proc/meminfo") as f:
@@ -113,6 +127,9 @@ def _record_failure(case_name, adapter, argv, proc, wall, request):
             pass
         record = {
             "timestamp": stamp,
+            "campaign": os.environ.get("NIFT_CAMPAIGN_ID", "manual"),
+            "run": os.environ.get("NIFT_CAMPAIGN_RUN", "single"),
+            "kind": "crash-or-nonjson",
             "case": case_name,
             "adapter": adapter,
             "argv": argv,
@@ -145,7 +162,7 @@ def _record_mismatch(case_name, expected, results, checks):
     try:
         FAILURES_DIR.mkdir(parents=True, exist_ok=True)
         stamp = _time.strftime("%Y%m%d-%H%M%S")
-        path = FAILURES_DIR / f"{stamp}-mismatch-{case_name}.json"
+        path = FAILURES_DIR / f"{_diag_stamp('mismatch')}-{_safe(case_name)}.json"
         try:
             st = os.statvfs(str(HERE))
             disk = {"free_bytes": st.f_bavail * st.f_frsize}
@@ -153,6 +170,8 @@ def _record_mismatch(case_name, expected, results, checks):
             disk = None
         record = {
             "timestamp": stamp,
+            "campaign": os.environ.get("NIFT_CAMPAIGN_ID", "manual"),
+            "run": os.environ.get("NIFT_CAMPAIGN_RUN", "single"),
             "case": case_name,
             "kind": "expectation-mismatch",
             "checks": checks,
