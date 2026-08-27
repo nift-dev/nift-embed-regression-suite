@@ -80,16 +80,19 @@ run_pass() {
   summary=$(grep "Embed contract:" "$out" | tail -1)
   failed=$(echo "$summary" | grep -oE '[0-9]+ failed' | cut -d' ' -f1)
   failed=${failed:-X}
-  # Structured diagnostics created for this run (crash/non-json/mismatch).
+  # Structured diagnostics created for THIS campaign and run (crash/non-json/
+  # mismatch). Matches the complete campaign id + run id (the diag filename is
+  # <campaign>-r<run>-t<ns>-<kind>-<case>-<adapter>.json) so retained evidence
+  # from another campaign can never interfere.
   local records
-  records=$(ls "$SUITE/embed/failures/" 2>/dev/null | grep -F "r${run}-" | wc -l)
+  records=$(find "$SUITE/embed/failures" -maxdepth 1 -name "*${CAMPAIGN}-r${run}-*" -type f 2>/dev/null | wc -l)
   echo "phase=$phase run=$run rc=$rc dur=${dur}s start=$start end=$end summary=\"$summary\"" >> "$OUT/campaign.log"
-  if [ $rc -ne 0 ] || [ "$failed" != "0" ] || grep -q "^FAIL " "$out"; then
+  if [ $rc -ne 0 ] || [ "$failed" != "0" ] || grep -q "^FAIL " "$out" || [ "$records" != "0" ]; then
     echo "=== FAILURE at phase=$phase run=$run (rc=$rc, failed=$failed) — STOPPING, state frozen ===" >> "$OUT/campaign.log"
     cp "$out" "$OUT/FAILURE-pass-${phase}-${run}.log"
     { echo "--- post-failure system state ---"; uptime; free -h | head -2; df -h /home | tail -1; } > "$OUT/FAILURE-system.txt"
     ls "$SUITE/embed/failures/" > "$OUT/FAILURE-records-listing.txt" 2>&1
-    for f in "$SUITE/embed/failures/"*r"${run}"*.json; do
+    for f in "$SUITE/embed/failures/"*"${CAMPAIGN}-r${run}-"*.json; do
       [ -f "$f" ] && { echo "== $f =="; head -80 "$f"; }
     done > "$OUT/FAILURE-structured.txt" 2>/dev/null
     collect_hashes > "$OUT/post-failure-hashes.txt"
@@ -178,32 +181,10 @@ done
 
 collect_hashes > "$OUT/post-hashes.txt"
 
-python3 - "$OUT" "$PASSES" <<'PY' || exit 1
-import json, pathlib, sys, statistics
-out, passes = pathlib.Path(sys.argv[1]), int(sys.argv[2])
-log = out / "campaign.log"
-lines = [l for l in log.read_text().splitlines() if "phase=campaign " in l]
-if len(lines) != passes:
-    print(f"ERROR: campaign log has {len(lines)} campaign entries, expected {passes}"); sys.exit(1)
-durs = [float(l.split("dur=")[1].split("s")[0]) for l in lines]
-fails = [l for l in lines if '"Embed contract: 36 passed, 0 failed"' not in l and "0 failed" not in l]
-d = sorted(durs)
-p95 = d[min(len(d)-1, int(len(d)*0.95))]
-baseline = json.loads((out / "baseline.json").read_text())
-post = {}
-with open(out / "post-hashes.txt") as f:
-    for line in f:
-        k, _, v = line.strip().partition("  "); post[k.strip()] = v.strip()
-bl = {}
-for line in baseline["initial_hashes"].splitlines():
-    k, _, v = line.strip().partition("  "); bl[k.strip()] = v.strip()
-print(f"campaign complete: {len(lines)} passes, all 36/36")
-print(f"duration: total={sum(durs)/60:.1f}min  per-pass min={min(d):.3f}s median={statistics.median(d):.3f}s p95={p95:.3f}s max={max(d):.3f}s")
-print(f"artifact hashes unchanged: {post == bl}")
-print(f"unexpected records/stderr/timeouts: {sum(1 for l in lines if 'rc=124' in l)} timeouts, "
-      f"{len([x for x in (out).glob('*.log') if 'FAIL' in x.name])} failure logs, "
-      f"{0} retries (none designed)")
-PY
-collect_hashes > "$OUT/post-hashes.txt"
+echo "=== final verification (exit gate) ==="
+python3 "$(dirname "${BASH_SOURCE[0]}")/warm_baseline_verify.py" "$OUT" "$PASSES" || {
+  echo "campaign FAILED final verification (see above / $OUT/hash-diff.txt)"
+  exit 1
+}
 echo "campaign log: $OUT/campaign.log"
 echo "done"

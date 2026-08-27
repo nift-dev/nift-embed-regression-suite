@@ -26,7 +26,11 @@ echo "== C ABI =="
 echo "== Go =="
 ( cd "$EMBED/bindings/go" && go build -o "$BIN/bench_go" ./bench && "$BIN/bench_go" )
 echo "== C# =="
-( cd "$EMBED/bindings/csharp/bench" && NIFT_NATIVE_LIB="$NIFT_C_ABI" dotnet run -v q 2>/dev/null | tail -1 )
+( cd "$EMBED/bindings/csharp/bench" || exit 1
+  NIFT_NATIVE_LIB="$NIFT_C_ABI" dotnet run -v q --nologo 2>&1 | tee "$BIN/cs.out"
+  rc=${PIPESTATUS[0]}
+  grep -q "cs raw=" "$BIN/cs.out" || rc=1
+  [ $rc -eq 0 ] )
 echo "== Node =="
 ( cd "$EMBED/bindings/node" && node bench/bench.js )
 echo "== Python =="

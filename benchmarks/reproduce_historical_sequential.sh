@@ -66,7 +66,7 @@ build_node_conditional() {
 run_perf_campaign() {
   local label="$1" trial="$2"
   local out="$PERF_LOG_DIR/${label}-t${trial}.log"
-  timeout 1800 bash "$SUITE/run-performance.sh" "$EMBED/nift" >"$out" 2>&1
+  timeout 1800 env REQUIRE_CP18_PART_B=1 bash "$SUITE/run-performance.sh" "$EMBED/nift" >"$out" 2>&1
   local rc=$?
   if [ $rc -ne 0 ]; then
     local why="failed"

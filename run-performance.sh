@@ -17,7 +17,17 @@ fi
 python3 "$ROOT/benchmarks/cp18_cli_build_workload.py" --nift "$NIFT_BIN"
 
 # CP18 part B: raw render + repeated/server workload across C++, C ABI, Go,
-# C#, Node, Python (needs NIFT_C_ABI / built harnesses).
+# C#, Node, Python (needs NIFT_C_ABI / built harnesses). Lenient by default
+# for manual benchmark use: a missing/failed Part B is reported as skipped and
+# does not fail the run. With REQUIRE_CP18_PART_B=1 Part B is mandatory: any
+# failure makes run-performance.sh non-zero and Part-B stderr is retained.
 if [[ -x "$ROOT/benchmarks/embed/run_cp18_embed.sh" ]]; then
-  NIFT_C_ABI="${NIFT_C_ABI:-$(dirname "$NIFT_BIN")/libnift_c.so}" "$ROOT/benchmarks/embed/run_cp18_embed.sh" 2>/dev/null ||     echo "CP18 part B skipped (embed bindings not built; set NIFT_C_ABI)"
+  if [[ "${REQUIRE_CP18_PART_B:-0}" == "1" ]]; then
+    NIFT_C_ABI="${NIFT_C_ABI:-$(dirname "$NIFT_BIN")/libnift_c.so}" \
+      "$ROOT/benchmarks/embed/run_cp18_embed.sh"
+  else
+    NIFT_C_ABI="${NIFT_C_ABI:-$(dirname "$NIFT_BIN")/libnift_c.so}" \
+      "$ROOT/benchmarks/embed/run_cp18_embed.sh" 2>/dev/null || \
+      echo "CP18 part B skipped (embed bindings not built; set NIFT_C_ABI)"
+  fi
 fi
