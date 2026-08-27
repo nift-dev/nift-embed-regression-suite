@@ -25,9 +25,11 @@
 set -u
 EVENT="${1:?usage: reproduce_historical_sequential.sh event1|event2|event3 [trials]}"
 TRIALS="${2:-20}"
-EMBED=/home/nick/Repositories/nift/nift-embed
-SUITE=/home/nick/Repositories/nift/nift-embed-regression-suite
-RUNS=/home/nick/Repositories/nift/nift-rs
+EMBED="${NIFT_CANONICAL_DIR:-}"
+[ -n "$EMBED" ] && [ -d "$EMBED" ] || { echo "EMBED (NIFT_CANONICAL_DIR) must point to a Nift checkout" >&2; exit 2; }
+SUITE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+RUNS="${NIFT_RS_DIR:-}"
+[ -n "$RUNS" ] && [ -d "$RUNS" ] || { echo "RUNS (NIFT_RS_DIR) must point to the nift-rs checkout" >&2; exit 2; }
 
 MANAGED_SNAPSHOT=/tmp/nift-event3-managed.tar.gz
 # Per-invocation log dir: NEVER destroyed so evidence accumulates across runs.

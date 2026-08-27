@@ -14,17 +14,23 @@
 #
 # Usage: benchmarks/portability_test.sh [canonical-checkout]
 set -euo pipefail
-CANON="${1:-/home/nick/Repositories/nift/nift}"
+[ "$#" -eq 1 ] || {
+    echo "usage: benchmarks/portability_test.sh /path/to/canonical-nift" >&2
+    exit 2
+}
+CANON="$1"
 SUITE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 [ -n "${RUST_HARNESS:-}" ] || { echo "RUST_HARNESS must point to a built nift-rs engine_harness" >&2; exit 2; }
+[ -x "$RUST_HARNESS" ] || { echo "RUST_HARNESS is not an executable harness: $RUST_HARNESS" >&2; exit 2; }
 [ -d "$CANON" ] || { echo "canonical checkout not found: $CANON" >&2; exit 2; }
 
 WORK="$(mktemp -d /tmp/nift-port-XXXXXX)"
 trap 'rm -rf "$WORK"' EXIT
 echo "portability work dir: $WORK"
 
-cp -r "$CANON" "$WORK/canon"
+mkdir -p "$WORK/canon"
+git -C "$CANON" archive HEAD | tar -x -C "$WORK/canon"
 cp -r "$SUITE_DIR" "$WORK/suite"
 
 echo "--- building canonical targets in the copy ---"
@@ -67,9 +73,13 @@ SELF="$(env CPP_HARNESS="$WORK/canon/.build/engine-harness" \
 echo "self-test: $SELF"
 echo "$SELF" | grep -q "negative checks passed" || { echo "FAIL: anti-agreement self-test"; exit 1; }
 
-echo "--- asserting no home-directory dependency in adapters ---"
-if grep -rq "/home/nick" "$WORK/suite/embed/adapters/"; then
-  echo "FAIL: an adapter references the original home directory"; exit 1
+echo "--- asserting no home-directory dependency in the whole harness ---"
+# Static check over ALL committed executable harnesses and adapters, not just
+# the adapter directory: no test/harness may depend on a developer's home path.
+# The pattern is assembled from parts so this script does not self-match.
+HOME_PREFIX="/home/""nick""/""Repositories"
+if grep -rIl "$HOME_PREFIX" "$WORK/suite/embed" "$WORK/suite/benchmarks" "$WORK/suite/contract" 2>/dev/null; then
+  echo "FAIL: a committed harness references the original home directory:"; exit 1
 fi
 
-echo "PORTABILITY PASS: corpus ran from unrelated temporary paths (36/36 + self-test), adapters have no home-dir defaults"
+echo "PORTABILITY PASS: corpus ran from unrelated temporary paths (36/36 + self-test); no home-dir dependency in adapters or harnesses"

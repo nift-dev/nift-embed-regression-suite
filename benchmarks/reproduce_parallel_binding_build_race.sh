@@ -17,9 +17,11 @@
 # Usage: reproduce_parallel_binding_build_race.sh [trials]
 set -u
 TRIALS="${1:-20}"
-EMBED=/home/nick/Repositories/nift/nift-embed
-SUITE=/home/nick/Repositories/nift/nift-embed-regression-suite
-RUNS=/home/nick/Repositories/nift/nift-rs
+EMBED="${NIFT_CANONICAL_DIR:-}"
+[ -n "$EMBED" ] && [ -d "$EMBED" ] || { echo "EMBED (NIFT_CANONICAL_DIR) must point to a Nift checkout" >&2; exit 2; }
+SUITE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+RUNS="${NIFT_RS_DIR:-}"
+[ -n "$RUNS" ] && [ -d "$RUNS" ] || { echo "RUNS (NIFT_RS_DIR) must point to the nift-rs checkout" >&2; exit 2; }
 
 clean_cold() {
   ( cd "$EMBED" && make clean >/dev/null 2>&1; rm -rf .build libnift_c.a libnift_c.so nift \

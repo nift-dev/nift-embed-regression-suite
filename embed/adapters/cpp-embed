@@ -28,6 +28,9 @@ harness = os.environ.get("CPP_HARNESS")
 if not harness:
     sys.stderr.write("CPP_HARNESS must point to a Nift canonical build's .build/engine-harness\n")
     sys.exit(2)
+if not os.path.exists(harness):
+    sys.stderr.write(f"CPP_HARNESS is not present: {harness}\n")
+    sys.exit(2)
 
 
 def dash(value):

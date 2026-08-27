@@ -27,9 +27,11 @@
 set -u
 PASSES="${1:-1000}"
 CAMPAIGN="${2:-warm-$(date +%Y%m%d-%H%M%S)}"
-EMBED=/home/nick/Repositories/nift/nift-embed
-SUITE=/home/nick/Repositories/nift/nift-embed-regression-suite
-RUNS=/home/nick/Repositories/nift/nift-rs
+EMBED="${NIFT_CANONICAL_DIR:-}"
+[ -n "$EMBED" ] && [ -d "$EMBED" ] || { echo "EMBED (NIFT_CANONICAL_DIR) must point to a Nift checkout" >&2; exit 2; }
+SUITE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+RUNS="${NIFT_RS_DIR:-}"
+[ -n "$RUNS" ] && [ -d "$RUNS" ] || { echo "RUNS (NIFT_RS_DIR) must point to the nift-rs checkout" >&2; exit 2; }
 OUT="$SUITE/benchmarks/warm-baseline/$CAMPAIGN"
 mkdir -p "$OUT"
 echo "campaign: $CAMPAIGN  passes: $PASSES  out: $OUT"
@@ -110,9 +112,9 @@ fi
 collect_hashes > "$OUT/baseline-hashes.txt"
 
 # Baseline JSON: heads, status, versions, initial system state.
-python3 - "$OUT" "$CAMPAIGN" "$PASSES" <<'PY' || exit 2
+python3 - "$OUT" "$CAMPAIGN" "$PASSES" "$EMBED" "$RUNS" "$SUITE" <<'PY' || exit 2
 import json, pathlib, subprocess, sys, os, time
-out, campaign, passes = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+out, campaign, passes, embed, runs, suite = (pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
 def sh(*a):
     try:
         return subprocess.run(a, capture_output=True, text=True).stdout.strip()
@@ -131,9 +133,9 @@ baseline = {
     "campaign": campaign,
     "passes": int(passes),
     "repos": {
-        "nift-embed": repo_state("/home/nick/Repositories/nift/nift-embed"),
-        "nift-rs": repo_state("/home/nick/Repositories/nift/nift-rs"),
-        "nift-embed-regression-suite": repo_state("/home/nick/Repositories/nift/nift-embed-regression-suite"),
+        "nift": repo_state(str(embed)),
+        "nift-rs": repo_state(str(runs)),
+        "nift-regression-suite": repo_state(str(suite)),
     },
     "toolchain": {
         "g++": sh("g++", "--version").splitlines()[0] if sh("g++", "--version") else "",

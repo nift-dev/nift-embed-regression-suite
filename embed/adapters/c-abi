@@ -18,6 +18,9 @@ LIB = os.environ.get("NIFT_C_ABI")
 if not LIB:
     sys.stderr.write("NIFT_C_ABI must point to the canonical build's libnift_c.so\n")
     sys.exit(2)
+if not os.path.exists(LIB):
+    sys.stderr.write(f"NIFT_C_ABI is not present: {LIB}\n")
+    sys.exit(2)
 lib = ctypes.CDLL(LIB)
 
 NIFT_OK = 0

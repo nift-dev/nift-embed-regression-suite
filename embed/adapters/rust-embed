@@ -18,6 +18,9 @@ if not harness:
     sys.stderr.write("RUST_HARNESS must point to the nift-rs engine_harness "
                      "(the independent experimental conformance implementation)\n")
     sys.exit(2)
+if not os.path.exists(harness):
+    sys.stderr.write(f"RUST_HARNESS is not present: {harness}\n")
+    sys.exit(2)
 
 
 def dash(value):

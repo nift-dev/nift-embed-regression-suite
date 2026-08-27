@@ -7,8 +7,9 @@
 set -u
 MODE="${1:-parallel}"
 ITERS="${2:-15}"
-EMBED=/home/nick/Repositories/nift/nift-embed
-SUITE=/home/nick/Repositories/nift/nift-embed-regression-suite
+EMBED="${NIFT_CANONICAL_DIR:-}"
+[ -n "$EMBED" ] && [ -d "$EMBED" ] || { echo "EMBED (NIFT_CANONICAL_DIR) must point to a Nift checkout" >&2; exit 2; }
+SUITE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DELAY="${DELAY:-3}"
 
 clean_all() {
@@ -17,7 +18,7 @@ clean_all() {
       bindings/csharp/apps/NiftEmbedHarness/bin bindings/csharp/apps/NiftEmbedHarness/obj 2>/dev/null )
   ( cd "$EMBED/bindings/python" && rm -f nift/_nift*.so; find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null )
   ( cd "$EMBED/bindings/csharp" && find . -name bin -o -name obj | xargs -r rm -rf 2>/dev/null )
-  ( cd /home/nick/Repositories/nift/nift-rs && cargo clean >/dev/null 2>&1 )
+  ( cd "$RUNS" && cargo clean >/dev/null 2>&1 )
 }
 
 heavy_build() {
@@ -30,7 +31,7 @@ heavy_build() {
           src/ProjectRead.cpp src/ProjectState.cpp src/WatchList.cpp src/BuildProgress.cpp \
           minifypp/src/Minify.cpp -o .build/engine-harness >/dev/null 2>&1 )
       ( cd "$EMBED/bindings/go" && go build -o embed-harness ./cmd/embed-harness >/dev/null 2>&1 )
-      ( cd /home/nick/Repositories/nift/nift-rs && cargo build --example engine_harness >/dev/null 2>&1 )
+      ( cd "$RUNS" && cargo build --example engine_harness >/dev/null 2>&1 )
       ( cd "$EMBED/bindings/csharp/apps/NiftEmbedHarness" && dotnet build -v q --nologo >/dev/null 2>&1 )
       ( cd "$EMBED/bindings/node" && bash build.sh >/dev/null 2>&1 )
       ( cd "$EMBED/bindings/python" && bash build.sh >/dev/null 2>&1 )
@@ -46,7 +47,7 @@ heavy_build() {
       P2=$!
       ( cd "$EMBED/bindings/go" && go build -o embed-harness ./cmd/embed-harness >/dev/null 2>&1 ) &
       P3=$!
-      ( cd /home/nick/Repositories/nift/nift-rs && cargo build --example engine_harness >/dev/null 2>&1 ) &
+      ( cd "$RUNS" && cargo build --example engine_harness >/dev/null 2>&1 ) &
       P4=$!
       ( cd "$EMBED/bindings/csharp/apps/NiftEmbedHarness" && dotnet build -v q --nologo >/dev/null 2>&1 ) &
       P5=$!
@@ -70,7 +71,7 @@ cold_start_probes() {
 
 run_corpus_once() {
   ( cd "$SUITE" && CPP_HARNESS="$EMBED/.build/engine-harness" \
-      RUST_HARNESS=/home/nick/Repositories/nift/nift-rs/target/debug/examples/engine_harness \
+      RUST_HARNESS="$RUNS/target/debug/examples/engine_harness" \
       NIFT_C_ABI="$EMBED/libnift_c.so" ./embed/run-embed.py > "$SUITE/embed/failures/last-run.log" 2>&1 )
   local rc=$?
   if [ $rc -ne 0 ] || grep -q "^FAIL " "$SUITE/embed/failures/last-run.log"; then
