@@ -11,9 +11,10 @@ import os
 import subprocess
 import sys
 
-NODE_DIR = os.environ.get(
-    "NIFT_NODE_DIR", "/home/nick/Repositories/nift/nift-embed/bindings/node"
-)
+NODE_DIR = os.environ.get("NIFT_NODE_DIR")
+if not NODE_DIR:
+    sys.stderr.write("NIFT_NODE_DIR must point to the canonical build's bindings/node\n")
+    sys.exit(2)
 HARNESS = os.path.join(NODE_DIR, "test", "embed-harness.js")
 
 if not os.path.exists(os.path.join(NODE_DIR, "build", "nift_node.node")):

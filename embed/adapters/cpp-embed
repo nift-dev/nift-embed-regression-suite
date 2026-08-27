@@ -24,9 +24,10 @@ import subprocess
 import sys
 
 req = json.load(sys.stdin)
-harness = os.environ.get(
-    "CPP_HARNESS", "/home/nick/Repositories/nift/nift-embed/.build/engine-harness"
-)
+harness = os.environ.get("CPP_HARNESS")
+if not harness:
+    sys.stderr.write("CPP_HARNESS must point to a Nift canonical build's .build/engine-harness\n")
+    sys.exit(2)
 
 
 def dash(value):

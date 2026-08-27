@@ -13,12 +13,16 @@ import shutil
 import subprocess
 import sys
 
-CSHARP_DIR = os.environ.get(
-    "NIFT_CSHARP_DIR", "/home/nick/Repositories/nift/nift-embed/bindings/csharp"
-)
+CSHARP_DIR = os.environ.get("NIFT_CSHARP_DIR")
+if not CSHARP_DIR:
+    sys.stderr.write("NIFT_CSHARP_DIR must point to the canonical build's bindings/csharp\n")
+    sys.exit(2)
 HARNESS_DIR = os.path.join(CSHARP_DIR, "apps", "NiftEmbedHarness", "bin", "Debug", "net10.0")
 HARNESS = os.path.join(HARNESS_DIR, "embed-harness")
-NATIVE_LIB = os.environ.get("NIFT_C_ABI", "/home/nick/Repositories/nift/nift-embed/libnift_c.so")
+NATIVE_LIB = os.environ.get("NIFT_C_ABI")
+if not NATIVE_LIB:
+    sys.stderr.write("NIFT_C_ABI must point to the canonical build's libnift_c.so\n")
+    sys.exit(2)
 
 if not os.path.exists(HARNESS):
     subprocess.run(

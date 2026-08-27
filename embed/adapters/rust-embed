@@ -13,10 +13,11 @@ import subprocess
 import sys
 
 req = json.load(sys.stdin)
-harness = os.environ.get(
-    "RUST_HARNESS",
-    "/home/nick/Repositories/nift/nift-rs/target/debug/examples/engine_harness",
-)
+harness = os.environ.get("RUST_HARNESS")
+if not harness:
+    sys.stderr.write("RUST_HARNESS must point to the nift-rs engine_harness "
+                     "(the independent experimental conformance implementation)\n")
+    sys.exit(2)
 
 
 def dash(value):

@@ -14,9 +14,10 @@ import json
 import os
 import sys
 
-LIB = os.environ.get(
-    "NIFT_C_ABI", "/home/nick/Repositories/nift/nift-embed/libnift_c.so"
-)
+LIB = os.environ.get("NIFT_C_ABI")
+if not LIB:
+    sys.stderr.write("NIFT_C_ABI must point to the canonical build's libnift_c.so\n")
+    sys.exit(2)
 lib = ctypes.CDLL(LIB)
 
 NIFT_OK = 0

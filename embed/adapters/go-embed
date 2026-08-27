@@ -11,9 +11,10 @@ import os
 import subprocess
 import sys
 
-GO_DIR = os.environ.get(
-    "NIFT_GO_DIR", "/home/nick/Repositories/nift/nift-embed/bindings/go"
-)
+GO_DIR = os.environ.get("NIFT_GO_DIR")
+if not GO_DIR:
+    sys.stderr.write("NIFT_GO_DIR must point to the canonical build's bindings/go\n")
+    sys.exit(2)
 HARNESS = os.path.join(GO_DIR, "embed-harness")
 
 if not os.path.exists(HARNESS):

@@ -11,9 +11,10 @@ import os
 import subprocess
 import sys
 
-PYTHON_DIR = os.environ.get(
-    "NIFT_PYTHON_DIR", "/home/nick/Repositories/nift/nift-embed/bindings/python"
-)
+PYTHON_DIR = os.environ.get("NIFT_PYTHON_DIR")
+if not PYTHON_DIR:
+    sys.stderr.write("NIFT_PYTHON_DIR must point to the canonical build's bindings/python\n")
+    sys.exit(2)
 HARNESS = os.path.join(PYTHON_DIR, "tests", "embed_harness.py")
 
 if not any(f.startswith("_nift") for f in os.listdir(os.path.join(PYTHON_DIR, "nift"))):
