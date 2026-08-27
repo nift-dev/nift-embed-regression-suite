@@ -56,7 +56,10 @@ ASP.NET Core dogfood), CP14 (Node/JS + HTTP dogfood), CP15 (Python + real Python
 web-app dogfood), CP16 (full historical + expanded regression), CP17
 (sanitizer/memory/platform, incl. the Go callback-buffer lifetime bound and
 loaderKeys separator normalization), CP18 (final performance, split CLI/build vs
-Embed/API/bindings), CP19 (merge + canonicalization). Each new binding joins this
+Embed/API/bindings), CP19 (rendering API direction, COMPLETE), CP20 (merge DECISION -
+outcome open, analysis/measurement/recommendation only; see
+nift-embed/docs/handover/MERGE-DECISION-REPORT.md - canonical Nift is not modified).
+Each new binding joins this
 suite as another shared-corpus adapter whose results must equal the frozen
 expectations (currently C++ API, nift-rs, C ABI, Go, C#, Node,
 Python).
