@@ -16,7 +16,7 @@
 #
 # Exits non-zero if any check fails.
 set -u
-SUITE=/home/nick/Repositories/nift/nift-embed-regression-suite
+SUITE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/nift-harness-probe.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 FAILED=0
